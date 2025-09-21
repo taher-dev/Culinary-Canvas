@@ -1,5 +1,7 @@
+
 export interface Recipe {
   id: string;
+  userId: string;
   image: string; // Base64 encoded string
   title: string;
   description: string;

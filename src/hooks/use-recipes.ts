@@ -1,40 +1,84 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Recipe } from '@/lib/types';
-
-const RECIPES_KEY = 'culinary-canvas-recipes';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { useAuth } from './use-auth';
 
 export function useRecipes() {
+  const { user } = useAuth();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const item = window.localStorage.getItem(RECIPES_KEY);
-      if (item) {
-        setRecipes(JSON.parse(item));
+    const fetchRecipes = async () => {
+      if (!user) {
+        setRecipes([]);
+        setIsLoading(false);
+        return;
       }
+
+      setIsLoading(true);
+      try {
+        const q = query(collection(db, 'recipes'), where('userId', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        const userRecipes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Recipe));
+        setRecipes(userRecipes);
+      } catch (error) {
+        console.error('Failed to load recipes from Firestore', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRecipes();
+  }, [user]);
+
+  const addRecipe = useCallback(async (newRecipe: Omit<Recipe, 'id'>) => {
+    if (!user) {
+      console.error('No user logged in to add recipe');
+      return;
+    }
+    try {
+      const docRef = await addDoc(collection(db, 'recipes'), {
+        ...newRecipe,
+        userId: user.uid,
+      });
+      setRecipes(prev => [...prev, { ...newRecipe, id: docRef.id, userId: user.uid }]);
     } catch (error) {
-      console.error('Failed to load recipes from localStorage', error);
+      console.error('Failed to save recipe to Firestore', error);
+    }
+  }, [user]);
+
+  const getRecipeById = useCallback(async (id: string): Promise<Recipe | undefined> => {
+    // First, check if the recipe is already in the local state
+    const localRecipe = recipes.find(recipe => recipe.id === id);
+    if (localRecipe) {
+      return localRecipe;
+    }
+
+    // If not, fetch from Firestore
+    setIsLoading(true);
+    try {
+      const docRef = doc(db, 'recipes', id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const recipeData = { id: docSnap.id, ...docSnap.data() } as Recipe;
+        // Optional: check if the user is authorized to view this recipe
+        if (user && recipeData.userId === user.uid) {
+          return recipeData;
+        }
+      }
+      return undefined;
+    } catch (error) {
+      console.error('Failed to fetch recipe from Firestore', error);
+      return undefined;
     } finally {
       setIsLoading(false);
     }
-  }, []);
-
-  const addRecipe = useCallback((newRecipe: Recipe) => {
-    try {
-      const updatedRecipes = [...recipes, newRecipe];
-      setRecipes(updatedRecipes);
-      window.localStorage.setItem(RECIPES_KEY, JSON.stringify(updatedRecipes));
-    } catch (error) {
-      console.error('Failed to save recipe to localStorage', error);
-    }
-  }, [recipes]);
-
-  const getRecipeById = useCallback((id: string): Recipe | undefined => {
-    return recipes.find(recipe => recipe.id === id);
-  }, [recipes]);
+  }, [recipes, user]);
 
   return { recipes, addRecipe, getRecipeById, isLoading };
 }

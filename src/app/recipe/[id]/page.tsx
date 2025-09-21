@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRecipes } from '@/hooks/use-recipes';
@@ -8,15 +9,32 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, ChefHat, Clock, ExternalLink, Users } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useEffect, useState } from 'react';
+import type { Recipe } from '@/lib/types';
 
 export default function RecipeDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { getRecipeById, isLoading } = useRecipes();
+  const { getRecipeById } = useRecipes();
   const id = typeof params.id === 'string' ? params.id : '';
-  const recipe = getRecipeById(id);
+  
+  const [recipe, setRecipe] = useState<Recipe | null | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    if (id) {
+      const fetchRecipe = async () => {
+        setIsLoading(true);
+        const fetchedRecipe = await getRecipeById(id);
+        setRecipe(fetchedRecipe);
+        setIsLoading(false);
+      };
+      fetchRecipe();
+    }
+  }, [id, getRecipeById]);
 
-  if (isLoading) {
+
+  if (isLoading || recipe === undefined) {
     return (
       <div className="container mx-auto max-w-4xl animate-pulse py-8 px-2 sm:px-6 md:px-8">
         <div className="mb-8 h-8 w-1/4 rounded-md bg-muted"></div>

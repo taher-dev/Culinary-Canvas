@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,6 +22,7 @@ import Image from 'next/image';
 import { useState, useRef } from 'react';
 import { fetchThumbnailAction } from '@/app/add/actions';
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from '@/hooks/use-auth';
 
 const recipeFormSchema = z.object({
   title: z.string().min(3, { message: 'Title must be at least 3 characters long.' }),
@@ -49,6 +51,7 @@ type RecipeFormValues = z.infer<typeof recipeFormSchema>;
 export default function RecipeForm() {
   const router = useRouter();
   const { addRecipe } = useRecipes();
+  const { user } = useAuth();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -115,7 +118,16 @@ export default function RecipeForm() {
   };
 
 
-  function onSubmit(data: RecipeFormValues) {
+  async function onSubmit(data: RecipeFormValues) {
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create a recipe.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const timeString = [
         data.time.hours ? `${data.time.hours}h` : '',
         data.time.minutes ? `${data.time.minutes}min` : ''
@@ -123,12 +135,14 @@ export default function RecipeForm() {
     
     const newRecipe = {
       ...data,
-      id: Date.now().toString(),
+      id: '', // Firestore will generate the ID
+      userId: user.uid,
       image: imagePreview || '',
       time: timeString,
       ingredients: data.ingredients,
     };
-    addRecipe(newRecipe);
+    
+    await addRecipe(newRecipe);
     router.push('/');
   }
 

@@ -3,7 +3,7 @@
 
 import { useRecipes } from '@/hooks/use-recipes';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -11,21 +11,36 @@ import { ArrowLeft, ChefHat } from 'lucide-react';
 import Link from 'next/link';
 import VideoEmbed from '@/components/VideoEmbed';
 import { Card, CardContent } from '@/components/ui/card';
+import type { Recipe } from '@/lib/types';
 
 export default function FollowAlongPage() {
   const params = useParams();
   const router = useRouter();
-  const { getRecipeById, isLoading } = useRecipes();
+  const { getRecipeById } = useRecipes();
   const id = typeof params.id === 'string' ? params.id : '';
-  const recipe = getRecipeById(id);
 
+  const [recipe, setRecipe] = useState<Recipe | null | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
   const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>({});
+
+  useEffect(() => {
+    if (id) {
+      const fetchRecipe = async () => {
+        setIsLoading(true);
+        const fetchedRecipe = await getRecipeById(id);
+        setRecipe(fetchedRecipe);
+        setIsLoading(false);
+      };
+      fetchRecipe();
+    }
+  }, [id, getRecipeById]);
+
 
   const handleStepToggle = (index: number) => {
     setCompletedSteps(prev => ({ ...prev, [index]: !prev[index] }));
   };
 
-  if (isLoading) {
+  if (isLoading || recipe === undefined) {
     return <div>Loading...</div>;
   }
 

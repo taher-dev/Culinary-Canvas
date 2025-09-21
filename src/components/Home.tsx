@@ -8,14 +8,28 @@ import RecipeCard from '@/components/RecipeCard';
 import { LayoutGrid, List, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 import RecipeListItem from './RecipeListItem';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function Home() {
+  const { user } = useAuth();
   const { recipes, isLoading } = useRecipes();
   const [view, setView] = useState<'card' | 'list'>('card');
 
   const toggleView = () => {
     setView(prev => (prev === 'card' ? 'list' : 'card'));
   };
+
+  if (!user && !isLoading) {
+    return (
+      <div className="container mx-auto px-2 py-8 sm:px-6 text-center">
+        <h1 className="text-3xl font-bold font-headline text-foreground">Welcome to Culinary Canvas</h1>
+        <p className="text-muted-foreground mt-2 mb-6">Please log in to manage your personal collection of culinary creations.</p>
+        <Button asChild>
+            <Link href="/login">Login</Link>
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-2 py-8 sm:px-6">
