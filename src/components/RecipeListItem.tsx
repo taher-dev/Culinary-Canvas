@@ -15,7 +15,7 @@ export default function RecipeListItem({ recipe }: RecipeListItemProps) {
     <Link href={`/recipe/${recipe.id}`} className="group block">
       <Card className="transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:border-primary overflow-hidden">
         <div className="flex">
-            <div className="relative h-36 w-32 flex-shrink-0">
+            <div className="relative w-32 flex-shrink-0">
                 <Image
                 src={recipe.image || "https://picsum.photos/seed/1/128/180"}
                 alt={recipe.title}
