@@ -18,7 +18,7 @@ export default function RecipeDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-4xl py-8 animate-pulse">
+      <div className="container mx-auto max-w-4xl py-8 px-4 sm:px-6 md:px-8 animate-pulse">
         <div className="h-8 w-1/4 bg-muted rounded-md mb-8"></div>
         <div className="aspect-[16/9] w-full bg-muted rounded-lg mb-6"></div>
         <div className="h-6 w-1/2 bg-muted rounded-md mb-4"></div>
@@ -41,7 +41,7 @@ export default function RecipeDetailPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-8">
+    <div className="container mx-auto max-w-4xl py-8 px-4 sm:px-6 md:px-8">
       <Button variant="ghost" asChild className='mb-8'>
         <Link href="/" className='flex items-center gap-2'>
           <ArrowLeft className="h-4 w-4" />
@@ -54,15 +54,15 @@ export default function RecipeDetailPage() {
           <Image
             src={recipe.image || "https://picsum.photos/seed/2/1280/720"}
             alt={recipe.title}
-            layout="fill"
-            objectFit="cover"
+            fill
+            className="object-cover"
             priority
           />
         </div>
 
         <Badge variant="secondary" className="mb-2">{recipe.category}</Badge>
-        <h1 className="text-4xl font-bold font-headline text-foreground mb-4">{recipe.title}</h1>
-        <p className="text-lg text-muted-foreground mb-6">{recipe.description}</p>
+        <h1 className="text-3xl sm:text-4xl font-bold font-headline text-foreground mb-4">{recipe.title}</h1>
+        <p className="text-base sm:text-lg text-muted-foreground mb-6">{recipe.description}</p>
 
         <div className="flex flex-wrap gap-x-6 gap-y-3 items-center text-foreground mb-6">
           <div className="flex items-center gap-2">
@@ -75,16 +75,16 @@ export default function RecipeDetailPage() {
           </div>
         </div>
 
-        <div className="flex gap-4 mb-8">
-            <Link href={`/recipe/${recipe.id}/follow`} passHref>
-                <Button size="lg">
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <Link href={`/recipe/${recipe.id}/follow`} passHref className="w-full sm:w-auto">
+                <Button size="lg" className="w-full">
                     <ChefHat className="mr-2 h-5 w-5" />
                     Follow Along
                 </Button>
             </Link>
             {recipe.referenceLink && (
-                <a href={recipe.referenceLink} target="_blank" rel="noopener noreferrer">
-                    <Button size="lg" variant="outline">
+                <a href={recipe.referenceLink} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                    <Button size="lg" variant="outline" className="w-full">
                         View Original Video
                         <ExternalLink className="ml-2 h-5 w-5" />
                     </Button>
