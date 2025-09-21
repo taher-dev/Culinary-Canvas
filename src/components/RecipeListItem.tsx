@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Users, Utensils } from 'lucide-react';
 import type { Recipe } from '@/lib/types';
@@ -15,7 +15,7 @@ export default function RecipeListItem({ recipe }: RecipeListItemProps) {
     <Link href={`/recipe/${recipe.id}`} className="group block">
       <Card className="transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:border-primary overflow-hidden">
         <div className="flex">
-            <div className="relative h-full w-32 flex-shrink-0">
+            <div className="relative h-36 w-32 flex-shrink-0">
                 <Image
                 src={recipe.image || "https://picsum.photos/seed/1/128/180"}
                 alt={recipe.title}
@@ -32,18 +32,18 @@ export default function RecipeListItem({ recipe }: RecipeListItemProps) {
                 {recipe.description}
                 </p>
                 <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4" />
-                    <span>{recipe.time}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <Users className="h-4 w-4" />
-                    <span>Serves {recipe.servingSize}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <Utensils className="h-4 w-4" />
-                    <span>{recipe.ingredients.length} ingredients</span>
-                </div>
+                    <div className="flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+                        <span>{recipe.time}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <Users className="h-4 w-4" />
+                        <span>Serves {recipe.servingSize}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <Utensils className="h-4 w-4" />
+                        <span>{recipe.ingredients.length} ingredients</span>
+                    </div>
                 </div>
             </div>
         </div>
