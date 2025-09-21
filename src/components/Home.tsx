@@ -1,13 +1,17 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useRecipes } from '@/hooks/use-recipes';
 import RecipeCard from '@/components/RecipeCard';
-import { PlusCircle } from 'lucide-react';
+import { LayoutGrid, List, PlusCircle } from 'lucide-react';
+import { useState } from 'react';
+import RecipeListItem from './RecipeListItem';
 
 export default function Home() {
   const { recipes, isLoading } = useRecipes();
+  const [view, setView] = useState<'card' | 'list'>('card');
 
   return (
     <div className="container mx-auto px-2 py-8 sm:px-6">
@@ -16,12 +20,30 @@ export default function Home() {
           <h1 className="text-3xl font-bold font-headline text-foreground">My Cooking History</h1>
           <p className="text-muted-foreground mt-1">Your personal collection of culinary creations.</p>
         </div>
-        <Link href="/add" passHref>
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add New Recipe
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+            <Button
+                variant={view === 'card' ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => setView('card')}
+                aria-label="Card View"
+            >
+                <LayoutGrid className="h-5 w-5" />
+            </Button>
+            <Button
+                variant={view === 'list' ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => setView('list')}
+                aria-label="List View"
+            >
+                <List className="h-5 w-5" />
+            </Button>
+            <Link href="/add" passHref>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add New Recipe
+                </Button>
+            </Link>
+        </div>
       </div>
 
       {isLoading ? (
@@ -35,11 +57,19 @@ export default function Home() {
           ))}
         </div>
       ) : recipes.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {recipes.map((recipe) => (
-            <RecipeCard key={recipe.id} recipe={recipe} />
-          ))}
-        </div>
+        view === 'card' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {recipes.map((recipe) => (
+                <RecipeCard key={recipe.id} recipe={recipe} />
+            ))}
+            </div>
+        ) : (
+            <div className="space-y-4">
+                {recipes.map(recipe => (
+                    <RecipeListItem key={recipe.id} recipe={recipe} />
+                ))}
+            </div>
+        )
       ) : (
         <div className="text-center py-20 border-2 border-dashed rounded-lg">
           <h2 className="text-xl font-semibold text-foreground">No Recipes Yet!</h2>
