@@ -18,7 +18,7 @@ export default function RecipeDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-4xl py-8 px-4 sm:px-6 md:px-8 animate-pulse">
+      <div className="container mx-auto max-w-4xl py-8 px-2 sm:px-6 md:px-8 animate-pulse">
         <div className="h-8 w-1/4 bg-muted rounded-md mb-8"></div>
         <div className="aspect-[16/9] w-full bg-muted rounded-lg mb-6"></div>
         <div className="h-6 w-1/2 bg-muted rounded-md mb-4"></div>
@@ -41,7 +41,7 @@ export default function RecipeDetailPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-8 px-4 sm:px-6 md:px-8">
+    <div className="container mx-auto max-w-4xl py-8 px-2 sm:px-6 md:px-8">
       <Button variant="ghost" asChild className='mb-8 -ml-4'>
         <Link href="/" className='flex items-center gap-2'>
           <ArrowLeft className="h-4 w-4" />

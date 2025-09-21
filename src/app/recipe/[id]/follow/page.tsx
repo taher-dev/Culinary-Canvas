@@ -39,7 +39,7 @@ export default function FollowAlongPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-5xl py-8 px-4 sm:px-6 md:px-8">
+    <div className="container mx-auto max-w-5xl py-8 px-2 sm:px-6 md:px-8">
        <Button variant="ghost" asChild className='mb-8 -ml-4'>
         <Link href={`/recipe/${id}`} className='flex items-center gap-2'>
           <ArrowLeft className="h-4 w-4" />

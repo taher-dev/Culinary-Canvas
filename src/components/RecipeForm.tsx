@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, Trash2, Youtube, Loader2, Camera } from 'lucide-react';
+import { PlusCircle, Trash2, Camera } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useRef } from 'react';
 import { fetchThumbnailAction } from '@/app/add/actions';
@@ -50,7 +50,6 @@ export default function RecipeForm() {
   const router = useRouter();
   const { addRecipe } = useRecipes();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isFetchingThumbnail, setIsFetchingThumbnail] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -98,7 +97,6 @@ export default function RecipeForm() {
     const videoUrl = form.getValues('referenceLink');
     if (!videoUrl) return;
 
-    setIsFetchingThumbnail(true);
     try {
       const result = await fetchThumbnailAction({ videoUrl });
       if (result.thumbnailDataUri) {
@@ -113,8 +111,6 @@ export default function RecipeForm() {
         description: "Could not fetch video thumbnail.",
         variant: "destructive",
       });
-    } finally {
-      setIsFetchingThumbnail(false);
     }
   };
 
@@ -339,15 +335,9 @@ export default function RecipeForm() {
           name="referenceLink"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Reference Link (YouTube)</FormLabel>
+              <FormLabel>Reference Link (e.g., YouTube)</FormLabel>
               <FormControl>
-                <div className='flex gap-2'>
-                    <Input placeholder="https://youtube.com/..." {...field} onBlur={handleFetchThumbnail} />
-                    <Button type='button' onClick={handleFetchThumbnail} disabled={isFetchingThumbnail || !field.value}>
-                        {isFetchingThumbnail ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Youtube className="mr-2 h-4 w-4"/>}
-                        Fetch Thumbnail
-                    </Button>
-                </div>
+                <Input placeholder="https://youtube.com/..." {...field} onBlur={handleFetchThumbnail} />
               </FormControl>
               <FormMessage />
             </FormItem>
