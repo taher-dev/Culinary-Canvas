@@ -13,6 +13,10 @@ export default function Home() {
   const { recipes, isLoading } = useRecipes();
   const [view, setView] = useState<'card' | 'list'>('card');
 
+  const toggleView = () => {
+    setView(prev => (prev === 'card' ? 'list' : 'card'));
+  };
+
   return (
     <div className="container mx-auto px-2 py-8 sm:px-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
@@ -21,28 +25,20 @@ export default function Home() {
           <p className="text-muted-foreground mt-1">Your personal collection of culinary creations.</p>
         </div>
         <div className="flex items-center gap-2">
-            <Button
-                variant={view === 'card' ? 'secondary' : 'ghost'}
-                size="icon"
-                onClick={() => setView('card')}
-                aria-label="Card View"
-            >
-                <LayoutGrid className="h-5 w-5" />
-            </Button>
-            <Button
-                variant={view === 'list' ? 'secondary' : 'ghost'}
-                size="icon"
-                onClick={() => setView('list')}
-                aria-label="List View"
-            >
-                <List className="h-5 w-5" />
-            </Button>
             <Link href="/add" passHref>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add New Recipe
                 </Button>
             </Link>
+            <Button
+                variant={'outline'}
+                size="icon"
+                onClick={toggleView}
+                aria-label="Toggle View"
+            >
+                {view === 'card' ? <List className="h-5 w-5 transition-transform duration-300 transform" /> : <LayoutGrid className="h-5 w-5 transition-transform duration-300 transform" />}
+            </Button>
         </div>
       </div>
 
