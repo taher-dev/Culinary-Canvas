@@ -99,7 +99,10 @@ export default function RecipeDetailPage() {
                 <h2 className="text-2xl font-bold font-headline mb-4">Ingredients</h2>
                 <ul className="space-y-2 list-disc list-inside text-foreground">
                     {recipe.ingredients.map((ing, index) => (
-                        <li key={index}>{ing.value}</li>
+                        <li key={index}>
+                            {ing.quantity && <strong>{ing.quantity}</strong>}{' '}
+                            {ing.value}
+                        </li>
                     ))}
                 </ul>
             </div>

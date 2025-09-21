@@ -27,8 +27,17 @@ const recipeFormSchema = z.object({
   description: z.string().min(10, { message: 'Description must be at least 10 characters.' }),
   category: z.string().min(2, { message: 'Category is required.' }),
   servingSize: z.coerce.number().min(1, { message: 'Serving size must be at least 1.' }),
-  time: z.string().min(3, { message: 'Cooking time is required.' }),
-  ingredients: z.array(z.object({ value: z.string().min(1, { message: 'Ingredient cannot be empty.' }) })),
+  time: z.object({
+    hours: z.coerce.number().min(0).optional(),
+    minutes: z.coerce.number().min(0).optional(),
+  }).refine(data => data.hours || data.minutes, {
+    message: "At least hours or minutes must be provided.",
+    path: ["hours"],
+  }),
+  ingredients: z.array(z.object({ 
+    quantity: z.string().optional(),
+    value: z.string().min(1, { message: 'Ingredient cannot be empty.' }) 
+  })),
   steps: z.array(z.object({ value: z.string().min(1, { message: 'Step cannot be empty.' }) })),
   referenceLink: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
   image: z.string().optional(),
@@ -51,8 +60,8 @@ export default function RecipeForm() {
       description: '',
       category: '',
       servingSize: 1,
-      time: '',
-      ingredients: [{ value: '' }],
+      time: { hours: 0, minutes: 0 },
+      ingredients: [{ quantity: '', value: '' }],
       steps: [{ value: '' }],
       referenceLink: '',
       image: '',
@@ -107,10 +116,20 @@ export default function RecipeForm() {
 
 
   function onSubmit(data: RecipeFormValues) {
+    const timeString = [
+        data.time.hours ? `${data.time.hours}h` : '',
+        data.time.minutes ? `${data.time.minutes}min` : ''
+    ].filter(Boolean).join(' ');
+    
     const newRecipe = {
       ...data,
       id: Date.now().toString(),
       image: imagePreview || '',
+      time: timeString,
+      ingredients: data.ingredients.map(ing => ({
+        ...ing,
+        quantity: ing.quantity ? parseFloat(ing.quantity) : undefined,
+      })),
     };
     addRecipe(newRecipe);
     router.push('/');
@@ -195,41 +214,68 @@ export default function RecipeForm() {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="time"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Total Time</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., 45 minutes" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="space-y-2">
+            <FormLabel>Total Time</FormLabel>
+            <div className="flex gap-2">
+              <FormField
+                control={form.control}
+                name="time.hours"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormControl>
+                      <Input type="number" placeholder="Hours" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="time.minutes"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormControl>
+                      <Input type="number" placeholder="Minutes" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+             <FormMessage>{form.formState.errors.time?.message}</FormMessage>
+          </div>
         </div>
         
         <div>
           <FormLabel>Ingredients</FormLabel>
           {ingredientFields.map((field, index) => (
-            <FormField
-              key={field.id}
-              control={form.control}
-              name={`ingredients.${index}.value`}
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-2 mt-2">
-                  <FormControl>
-                    <Input placeholder={`Ingredient ${index + 1}`} {...field} />
-                  </FormControl>
-                  <Button type="button" variant="destructive" size="icon" onClick={() => removeIngredient(index)}>
+             <div key={field.id} className="flex items-start gap-2 mt-2">
+                <FormField
+                    control={form.control}
+                    name={`ingredients.${index}.quantity`}
+                    render={({ field }) => (
+                        <FormItem className="w-24">
+                        <FormControl>
+                            <Input type="text" placeholder="e.g., 2" {...field} />
+                        </FormControl>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                control={form.control}
+                name={`ingredients.${index}.value`}
+                render={({ field }) => (
+                    <FormItem className="flex-1">
+                    <FormControl>
+                        <Input placeholder={`Ingredient ${index + 1}`} {...field} />
+                    </FormControl>
+                    </FormItem>
+                )}
+                />
+                <Button type="button" variant="destructive" size="icon" onClick={() => removeIngredient(index)}>
                     <Trash2 className="h-4 w-4" />
-                  </Button>
-                </FormItem>
-              )}
-            />
+                </Button>
+            </div>
           ))}
-          <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendIngredient({ value: '' })}>
+          <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendIngredient({ quantity: '', value: '' })}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Ingredient
           </Button>

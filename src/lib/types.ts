@@ -6,8 +6,8 @@ export interface Recipe {
   category: string;
   servingSize: number;
   time: string;
-  ingredients: { value: string }[];
-  steps: { value: string }[];
+  ingredients: { quantity?: number | string; value: string }[];
+  steps: { value:string }[];
   referenceLink: string;
   thumbnailUrl?: string | null;
 }
