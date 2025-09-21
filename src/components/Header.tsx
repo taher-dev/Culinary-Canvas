@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CookingPot } from 'lucide-react';
+import { ChefHat } from 'lucide-react';
 
 export function Header() {
   return (
@@ -7,7 +7,7 @@ export function Header() {
       <div className="container flex h-14 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <CookingPot className="h-6 w-6 text-primary" />
+            <ChefHat className="h-6 w-6 text-primary" />
             <span className="font-bold font-headline">Culinary Canvas</span>
           </Link>
         </div>
