@@ -24,7 +24,7 @@ export default function Home() {
           <h1 className="text-3xl font-bold font-headline text-foreground">My Cooking History</h1>
           <p className="text-muted-foreground mt-1">Your personal collection of culinary creations.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full sm:w-auto items-center justify-between sm:justify-start sm:gap-2">
             <Link href="/add" passHref>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
