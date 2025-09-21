@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 export default function AddRecipePage() {
   return (
-    <div className="container mx-auto max-w-3xl py-8">
+    <div className="container mx-auto max-w-3xl py-8 px-2 sm:px-4 md:px-6">
       <div className="mb-8">
         <Button variant="ghost" asChild>
             <Link href="/" className='flex items-center gap-2'>

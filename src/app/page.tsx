@@ -10,7 +10,7 @@ export default function Home() {
   const { recipes, isLoading } = useRecipes();
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-2 py-8 sm:px-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold font-headline text-foreground">My Cooking History</h1>
