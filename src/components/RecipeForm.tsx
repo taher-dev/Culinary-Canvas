@@ -16,9 +16,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, Trash2, Youtube, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, Youtube, Loader2, Camera } from 'lucide-react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { fetchThumbnailAction } from '@/app/add/actions';
 import { useToast } from "@/hooks/use-toast"
 
@@ -30,8 +30,8 @@ const recipeFormSchema = z.object({
   time: z.object({
     hours: z.coerce.number().min(0).optional(),
     minutes: z.coerce.number().min(0).optional(),
-  }).refine(data => data.hours || data.minutes, {
-    message: "At least hours or minutes must be provided.",
+  }).refine(data => (data.hours || 0) > 0 || (data.minutes || 0) > 0, {
+    message: "At least hours or minutes must be provided and be greater than 0.",
     path: ["hours"],
   }),
   ingredients: z.array(z.object({ 
@@ -52,6 +52,8 @@ export default function RecipeForm() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isFetchingThumbnail, setIsFetchingThumbnail] = useState(false);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   const form = useForm<RecipeFormValues>({
     resolver: zodResolver(recipeFormSchema),
@@ -101,6 +103,8 @@ export default function RecipeForm() {
       const result = await fetchThumbnailAction({ videoUrl });
       if (result.thumbnailDataUri) {
         form.setValue('thumbnailUrl', result.thumbnailDataUri);
+        setImagePreview(result.thumbnailDataUri);
+        form.setValue('image', result.thumbnailDataUri);
       }
     } catch (error) {
       console.error("Failed to fetch thumbnail", error);
@@ -126,10 +130,7 @@ export default function RecipeForm() {
       id: Date.now().toString(),
       image: imagePreview || '',
       time: timeString,
-      ingredients: data.ingredients.map(ing => ({
-        ...ing,
-        quantity: ing.quantity ? parseFloat(ing.quantity) : undefined,
-      })),
+      ingredients: data.ingredients,
     };
     addRecipe(newRecipe);
     router.push('/');
@@ -146,12 +147,30 @@ export default function RecipeForm() {
               <FormLabel>Finished Dish Image</FormLabel>
               <FormControl>
                 <>
-                  {imagePreview && (
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageChange} 
+                    className="hidden" 
+                    ref={fileInputRef} 
+                  />
+                  {!imagePreview ? (
+                     <Button type="button" variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}>
+                       <Camera className="mr-2 h-4 w-4" />
+                       Upload Image
+                     </Button>
+                  ) : (
                     <div className="mt-4 relative w-full aspect-video rounded-md overflow-hidden">
-                      <Image src={imagePreview} alt="Dish preview" layout="fill" objectFit="cover" />
+                      <Image src={imagePreview} alt="Dish preview" fill objectFit="cover" />
+                       <Button type="button" variant="secondary" size="sm" className="absolute top-2 right-2" onClick={() => {
+                         setImagePreview(null);
+                         form.setValue('image', '');
+                         if(fileInputRef.current) fileInputRef.current.value = '';
+                       }}>
+                         Change Image
+                       </Button>
                     </div>
                   )}
-                  <Input type="file" accept="image/*" onChange={handleImageChange} className="mt-2" />
                 </>
               </FormControl>
               <FormMessage />
@@ -216,15 +235,16 @@ export default function RecipeForm() {
           />
           <div className="space-y-2">
             <FormLabel>Total Time</FormLabel>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <FormField
                 control={form.control}
                 name="time.hours"
                 render={({ field }) => (
-                  <FormItem className="w-full">
+                  <FormItem className="w-full flex items-center gap-2">
                     <FormControl>
                       <Input type="number" placeholder="Hours" {...field} />
                     </FormControl>
+                    <span className="text-muted-foreground">h</span>
                   </FormItem>
                 )}
               />
@@ -232,10 +252,11 @@ export default function RecipeForm() {
                 control={form.control}
                 name="time.minutes"
                 render={({ field }) => (
-                  <FormItem className="w-full">
+                  <FormItem className="w-full flex items-center gap-2">
                     <FormControl>
                       <Input type="number" placeholder="Minutes" {...field} />
                     </FormControl>
+                    <span className="text-muted-foreground">min</span>
                   </FormItem>
                 )}
               />
@@ -254,7 +275,7 @@ export default function RecipeForm() {
                     render={({ field }) => (
                         <FormItem className="w-24">
                         <FormControl>
-                            <Input type="text" placeholder="e.g., 2" {...field} />
+                            <Input type="text" placeholder="Qty" {...field} className="bg-muted/50" />
                         </FormControl>
                         </FormItem>
                     )}
@@ -275,6 +296,9 @@ export default function RecipeForm() {
                 </Button>
             </div>
           ))}
+           <FormMessage>
+            {form.formState.errors.ingredients?.root?.message}
+           </FormMessage>
           <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendIngredient({ quantity: '', value: '' })}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Ingredient
@@ -301,6 +325,9 @@ export default function RecipeForm() {
               )}
             />
           ))}
+           <FormMessage>
+            {form.formState.errors.steps?.root?.message}
+           </FormMessage>
           <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendStep({ value: '' })}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Step
@@ -312,11 +339,11 @@ export default function RecipeForm() {
           name="referenceLink"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Reference Link</FormLabel>
+              <FormLabel>Reference Link (YouTube)</FormLabel>
               <FormControl>
                 <div className='flex gap-2'>
                     <Input placeholder="https://youtube.com/..." {...field} onBlur={handleFetchThumbnail} />
-                    <Button type='button' onClick={handleFetchThumbnail} disabled={isFetchingThumbnail}>
+                    <Button type='button' onClick={handleFetchThumbnail} disabled={isFetchingThumbnail || !field.value}>
                         {isFetchingThumbnail ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Youtube className="mr-2 h-4 w-4"/>}
                         Fetch Thumbnail
                     </Button>
@@ -327,9 +354,9 @@ export default function RecipeForm() {
           )}
         />
 
-        {form.watch('thumbnailUrl') && (
+        {form.watch('thumbnailUrl') && !imagePreview && (
             <div className="mt-4 relative w-full max-w-xs aspect-video rounded-md overflow-hidden">
-                <Image src={form.watch('thumbnailUrl')!} alt="Video thumbnail" layout="fill" objectFit="cover" />
+                <Image src={form.watch('thumbnailUrl')!} alt="Video thumbnail" fill objectFit="cover" />
             </div>
         )}
 
