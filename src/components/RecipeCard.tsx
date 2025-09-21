@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock } from 'lucide-react';
+import { Clock, Users, Utensils } from 'lucide-react';
 import type { Recipe } from '@/lib/types';
 
 interface RecipeCardProps {
@@ -32,10 +32,20 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
           <p className="text-sm text-muted-foreground mb-3 h-10 line-clamp-2">
             {recipe.description}
           </p>
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Clock className="h-4 w-4 mr-1.5" />
-            <span>{recipe.time}</span>
-          </div>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4" />
+                <span>{recipe.time}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Users className="h-4 w-4" />
+                <span>Serves {recipe.servingSize}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Utensils className="h-4 w-4" />
+                <span>{recipe.ingredients.length} ingredients</span>
+              </div>
+            </div>
         </CardContent>
       </Card>
     </Link>
