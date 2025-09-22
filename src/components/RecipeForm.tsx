@@ -156,7 +156,7 @@ export default function RecipeForm() {
             <FormItem>
               <FormLabel>Finished Dish Image</FormLabel>
               <FormControl>
-                <>
+                <div>
                   <Input 
                     type="file" 
                     accept="image/*" 
@@ -181,7 +181,7 @@ export default function RecipeForm() {
                        </Button>
                     </div>
                   )}
-                </>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
