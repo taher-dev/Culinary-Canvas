@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, Trash2, Camera } from 'lucide-react';
+import { PlusCircle, Trash2, Camera, Replace, X } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useRef } from 'react';
 import { fetchThumbnailAction } from '@/app/add/actions';
@@ -96,6 +96,13 @@ export default function RecipeForm() {
       reader.readAsDataURL(file);
     }
   };
+
+  const clearImage = () => {
+    setImagePreview(null);
+    form.setValue('image', '');
+    form.setValue('thumbnailUrl', null);
+    if(fileInputRef.current) fileInputRef.current.value = '';
+  }
   
   const handleFetchThumbnail = async () => {
     const videoUrl = form.getValues('referenceLink');
@@ -170,15 +177,18 @@ export default function RecipeForm() {
                        Upload Image
                      </Button>
                   ) : (
-                    <div className="mt-4 relative w-full aspect-video rounded-md overflow-hidden">
-                      <Image src={imagePreview} alt="Dish preview" fill objectFit="cover" />
-                       <Button type="button" variant="secondary" size="sm" className="absolute top-2 right-2" onClick={() => {
-                         setImagePreview(null);
-                         form.setValue('image', '');
-                         if(fileInputRef.current) fileInputRef.current.value = '';
-                       }}>
-                         Change Image
-                       </Button>
+                    <div className="mt-4 relative w-full aspect-video rounded-md overflow-hidden group">
+                      <Image src={imagePreview} alt="Dish preview" fill style={{ objectFit: 'cover' }} />
+                       <div className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <Button type="button" variant="secondary" size="icon" className="h-8 w-8" onClick={() => fileInputRef.current?.click()}>
+                            <Replace className="h-4 w-4" />
+                            <span className="sr-only">Change Image</span>
+                          </Button>
+                           <Button type="button" variant="destructive" size="icon" className="h-8 w-8" onClick={clearImage}>
+                            <X className="h-4 w-4" />
+                             <span className="sr-only">Remove Image</span>
+                          </Button>
+                       </div>
                     </div>
                   )}
                 </div>
@@ -360,7 +370,7 @@ export default function RecipeForm() {
 
         {form.watch('thumbnailUrl') && !imagePreview && (
             <div className="mt-4 relative w-full max-w-xs aspect-video rounded-md overflow-hidden">
-                <Image src={form.watch('thumbnailUrl')!} alt="Video thumbnail" fill objectFit="cover" />
+                <Image src={form.watch('thumbnailUrl')!} alt="Video thumbnail" fill style={{ objectFit: 'cover' }} />
             </div>
         )}
 
@@ -372,3 +382,5 @@ export default function RecipeForm() {
     </Form>
   );
 }
+
+    
