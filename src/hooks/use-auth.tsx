@@ -37,10 +37,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  if (loading) {
-    return null; // Or a loading spinner
-  }
-
   return (
     <AuthContext.Provider value={{ user, loading, signOut }}>
       {children}
