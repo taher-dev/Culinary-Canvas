@@ -127,7 +127,7 @@ export default function RecipeDetailPage() {
             )}
              <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button size="lg" variant="destructive" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto text-destructive border-destructive/50 hover:bg-destructive/5 hover:text-destructive">
                     <Trash2 className="mr-2 h-5 w-5" />
                     Delete Recipe
                 </Button>
@@ -142,7 +142,7 @@ export default function RecipeDetailPage() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                  <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">Delete</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
