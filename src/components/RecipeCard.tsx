@@ -26,32 +26,30 @@ interface RecipeCardProps {
 export default function RecipeCard({ recipe }: RecipeCardProps) {
   const { deleteRecipe } = useRecipes();
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigating to the recipe page
+  const stopPropagation = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
   };
 
   const confirmDelete = async (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation
-    e.stopPropagation();
+    stopPropagation(e);
     await deleteRecipe(recipe.id);
   };
 
   return (
     <Card className="h-full overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl group relative">
        <AlertDialog>
-        <AlertDialogTrigger asChild>
+        <AlertDialogTrigger asChild onClick={stopPropagation}>
           <Button
             variant="destructive"
             size="icon"
             className="absolute top-2 right-2 z-10 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={handleDelete}
             aria-label="Delete recipe"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+        <AlertDialogContent onClick={stopPropagation}>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -60,7 +58,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={stopPropagation}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete}>
               Yes, delete it
             </AlertDialogAction>
