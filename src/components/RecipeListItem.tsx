@@ -18,6 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useRecipes } from '@/hooks/use-recipes';
+import { useState } from 'react';
 
 interface RecipeListItemProps {
   recipe: Recipe;
@@ -25,13 +26,18 @@ interface RecipeListItemProps {
 
 export default function RecipeListItem({ recipe }: RecipeListItemProps) {
   const { deleteRecipe } = useRecipes();
+  const [isHovering, setIsHovering] = useState(false);
   
   const confirmDelete = async () => {
     await deleteRecipe(recipe.id);
   };
 
   return (
-    <div className="group relative">
+    <div 
+      className="group relative"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
       <Link href={`/recipe/${recipe.id}`} className="block">
         <Card className="transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:border-primary overflow-hidden">
           <div className="flex items-stretch">
@@ -74,7 +80,7 @@ export default function RecipeListItem({ recipe }: RecipeListItemProps) {
           <Button
             variant="destructive"
             size="icon"
-            className="absolute top-2 right-2 z-10 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+            className={`absolute top-2 right-2 z-10 h-8 w-8 transition-opacity ${isHovering ? 'opacity-100' : 'opacity-0'}`}
             aria-label="Delete recipe"
           >
             <Trash2 className="h-4 w-4" />
@@ -90,7 +96,7 @@ export default function RecipeListItem({ recipe }: RecipeListItemProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
               Yes, delete it
             </AlertDialogAction>
           </AlertDialogFooter>
