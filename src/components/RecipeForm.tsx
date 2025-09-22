@@ -23,6 +23,7 @@ import { useState, useRef } from 'react';
 import { fetchThumbnailAction } from '@/app/add/actions';
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from '@/hooks/use-auth';
+import type { Recipe } from '@/lib/types';
 
 const recipeFormSchema = z.object({
   title: z.string().min(3, { message: 'Title must be at least 3 characters long.' }),
@@ -133,16 +134,15 @@ export default function RecipeForm() {
         data.time.minutes ? `${data.time.minutes}min` : ''
     ].filter(Boolean).join(' ');
     
-    const newRecipe = {
+    const newRecipeData = {
       ...data,
-      id: '', // Firestore will generate the ID
       userId: user.uid,
       image: imagePreview || '',
       time: timeString,
       ingredients: data.ingredients,
     };
     
-    await addRecipe(newRecipe);
+    await addRecipe(newRecipeData);
     router.push('/');
   }
 

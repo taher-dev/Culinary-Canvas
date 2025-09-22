@@ -36,17 +36,14 @@ export function useRecipes() {
     fetchRecipes();
   }, [user]);
 
-  const addRecipe = useCallback(async (newRecipe: Omit<Recipe, 'id'>) => {
+  const addRecipe = useCallback(async (newRecipeData: Omit<Recipe, 'id'>) => {
     if (!user) {
       console.error('No user logged in to add recipe');
       return;
     }
     try {
-      const docRef = await addDoc(collection(db, 'recipes'), {
-        ...newRecipe,
-        userId: user.uid,
-      });
-      setRecipes(prev => [...prev, { ...newRecipe, id: docRef.id, userId: user.uid }]);
+      const docRef = await addDoc(collection(db, 'recipes'), newRecipeData);
+      setRecipes(prev => [...prev, { ...newRecipeData, id: docRef.id }]);
     } catch (error) {
       console.error('Failed to save recipe to Firestore', error);
     }
