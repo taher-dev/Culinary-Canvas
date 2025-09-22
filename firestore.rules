@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /recipes/{recipeId} {
+      // Allow users to read recipes only if they are the owner.
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Allow users to create a recipe if they are logged in and the recipe's userId matches their own.
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      
+      // Allow users to delete a recipe only if they are the owner.
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Users are not allowed to update recipes in this version of the app.
+      allow update: if false;
+    }
+  }
+}

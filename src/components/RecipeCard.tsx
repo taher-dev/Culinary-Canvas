@@ -3,30 +3,85 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Users, Utensils } from 'lucide-react';
+import { Clock, Users, Utensils, Trash2 } from 'lucide-react';
 import type { Recipe } from '@/lib/types';
+import { Button } from './ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useRecipes } from '@/hooks/use-recipes';
 
 interface RecipeCardProps {
   recipe: Recipe;
 }
 
 export default function RecipeCard({ recipe }: RecipeCardProps) {
+  const { deleteRecipe } = useRecipes();
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigating to the recipe page
+    e.stopPropagation();
+  };
+
+  const confirmDelete = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation
+    e.stopPropagation();
+    await deleteRecipe(recipe.id);
+  };
+
   return (
-    <Link href={`/recipe/${recipe.id}`} className="group block">
-      <Card className="h-full overflow-hidden transition-all duration-300 ease-in-out group-hover:shadow-xl group-hover:-translate-y-1">
+    <Card className="h-full overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl group relative">
+       <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="destructive"
+            size="icon"
+            className="absolute top-2 right-2 z-10 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={handleDelete}
+            aria-label="Delete recipe"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the recipe
+              for "{recipe.title}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              Yes, delete it
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Link href={`/recipe/${recipe.id}`} className="group/link block">
         <CardHeader className="p-0">
           <div className="aspect-[4/3] relative w-full overflow-hidden">
             <Image
               src={recipe.image || "https://picsum.photos/seed/1/400/300"}
               alt={recipe.title}
               fill
-              className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+              className="object-cover transition-transform duration-300 ease-in-out group-hover/link:scale-105"
             />
           </div>
         </CardHeader>
         <CardContent className="p-4">
           <Badge variant="secondary" className="mb-2">{recipe.category}</Badge>
-          <CardTitle className="text-lg font-headline font-semibold leading-tight mb-2 truncate group-hover:text-primary">
+          <CardTitle className="text-lg font-headline font-semibold leading-tight mb-2 truncate group-hover/link:text-primary">
             {recipe.title}
           </CardTitle>
           <p className="text-sm text-muted-foreground mb-3 h-10 line-clamp-2">
@@ -47,7 +102,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
               </div>
             </div>
         </CardContent>
-      </Card>
-    </Link>
+      </Link>
+    </Card>
   );
 }

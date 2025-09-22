@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Recipe } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { useAuth } from './use-auth';
 
 export function useRecipes() {
@@ -43,27 +43,23 @@ export function useRecipes() {
     }
     try {
       const docRef = await addDoc(collection(db, 'recipes'), newRecipeData);
-      setRecipes(prev => [...prev, { ...newRecipeData, id: docRef.id }]);
+      setRecipes(prev => [{ ...newRecipeData, id: docRef.id }, ...prev]);
     } catch (error) {
       console.error('Failed to save recipe to Firestore', error);
     }
   }, [user]);
 
   const getRecipeById = useCallback(async (id: string): Promise<Recipe | undefined> => {
-    // First, check if the recipe is already in the local state
     const localRecipe = recipes.find(recipe => recipe.id === id);
     if (localRecipe) {
       return localRecipe;
     }
 
-    // If not, fetch from Firestore
-    setIsLoading(true);
     try {
       const docRef = doc(db, 'recipes', id);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const recipeData = { id: docSnap.id, ...docSnap.data() } as Recipe;
-        // Optional: check if the user is authorized to view this recipe
         if (user && recipeData.userId === user.uid) {
           return recipeData;
         }
@@ -72,10 +68,21 @@ export function useRecipes() {
     } catch (error) {
       console.error('Failed to fetch recipe from Firestore', error);
       return undefined;
-    } finally {
-      setIsLoading(false);
     }
   }, [recipes, user]);
 
-  return { recipes, addRecipe, getRecipeById, isLoading };
+  const deleteRecipe = useCallback(async (recipeId: string) => {
+    if (!user) {
+      console.error('No user logged in to delete recipe');
+      return;
+    }
+    try {
+      await deleteDoc(doc(db, 'recipes', recipeId));
+      setRecipes(prev => prev.filter(recipe => recipe.id !== recipeId));
+    } catch (error) {
+      console.error('Failed to delete recipe from Firestore', error);
+    }
+  }, [user]);
+
+  return { recipes, addRecipe, getRecipeById, deleteRecipe, isLoading };
 }

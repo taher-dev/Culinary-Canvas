@@ -7,15 +7,26 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, ChefHat, Clock, ExternalLink, Users } from 'lucide-react';
+import { ArrowLeft, ChefHat, Clock, ExternalLink, Trash2, Users } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useEffect, useState } from 'react';
 import type { Recipe } from '@/lib/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function RecipeDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { getRecipeById } = useRecipes();
+  const { getRecipeById, deleteRecipe } = useRecipes();
   const id = typeof params.id === 'string' ? params.id : '';
   
   const [recipe, setRecipe] = useState<Recipe | null | undefined>(undefined);
@@ -33,6 +44,12 @@ export default function RecipeDetailPage() {
     }
   }, [id, getRecipeById]);
 
+  const handleDelete = async () => {
+    if (recipe) {
+      await deleteRecipe(recipe.id);
+      router.push('/');
+    }
+  };
 
   if (isLoading || recipe === undefined) {
     return (
@@ -108,6 +125,27 @@ export default function RecipeDetailPage() {
                     </Button>
                 </a>
             )}
+             <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="lg" variant="destructive" className="w-full sm:w-auto">
+                    <Trash2 className="mr-2 h-5 w-5" />
+                    Delete Recipe
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete your
+                    recipe and remove your data from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
         </div>
         
         <Separator className="my-8" />
