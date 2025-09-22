@@ -26,13 +26,7 @@ interface RecipeListItemProps {
 export default function RecipeListItem({ recipe }: RecipeListItemProps) {
   const { deleteRecipe } = useRecipes();
   
-  const stopPropagation = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const confirmDelete = async (e: React.MouseEvent) => {
-    stopPropagation(e);
+  const confirmDelete = async () => {
     await deleteRecipe(recipe.id);
   };
 
@@ -76,17 +70,18 @@ export default function RecipeListItem({ recipe }: RecipeListItemProps) {
         </Card>
       </Link>
       <AlertDialog>
-        <AlertDialogTrigger asChild onClick={stopPropagation}>
+        <AlertDialogTrigger asChild>
           <Button
             variant="destructive"
             size="icon"
             className="absolute top-2 right-2 z-10 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
             aria-label="Delete recipe"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent onClick={stopPropagation}>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -95,7 +90,7 @@ export default function RecipeListItem({ recipe }: RecipeListItemProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={stopPropagation}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete}>
               Yes, delete it
             </AlertDialogAction>
