@@ -50,6 +50,7 @@ export default function LoginPage() {
         const credential = EmailAuthProvider.credential(email, password);
         await linkWithCredential(currentUser, credential);
         toast({ title: "Account linked successfully!", description: "Your guest data has been saved." });
+        router.push('/');
       } else {
         // Standard sign-in or sign-up
         if (isSigningUp) {
@@ -60,7 +61,7 @@ export default function LoginPage() {
           toast({ title: "Login successful!", description: "Welcome back." });
         }
       }
-      // Redirection will be handled by the useAuth hook
+      // Redirection for new signup/login is handled by the useAuth hook
     } catch (error) {
       const authError = error as AuthError;
       let errorMessage = 'An unexpected error occurred. Please try again.';
@@ -96,7 +97,11 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
         await signInWithGoogle();
-        // Redirection handled by useAuth hook
+        // After linking, the user object updates. If they were anonymous, we redirect.
+        if (user?.isAnonymous) {
+            router.push('/');
+        }
+        // Otherwise redirection is handled by useAuth hook
     } catch (error) {
         const authError = error as AuthError;
         let description = "Could not sign in with Google. Please try again.";
