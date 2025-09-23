@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Recipe } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, query, where, getDocs, doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, doc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { useAuth } from './use-auth';
 
 export function useRecipes() {
@@ -49,6 +49,20 @@ export function useRecipes() {
     }
   }, [user]);
 
+  const updateRecipe = useCallback(async (recipeId: string, updatedData: Partial<Recipe>) => {
+    if (!user) {
+        console.error('No user logged in to update recipe');
+        return;
+    }
+    try {
+        const recipeRef = doc(db, 'recipes', recipeId);
+        await updateDoc(recipeRef, updatedData);
+        setRecipes(prev => prev.map(recipe => recipe.id === recipeId ? { ...recipe, ...updatedData } : recipe));
+    } catch (error) {
+        console.error('Failed to update recipe in Firestore', error);
+    }
+  }, [user]);
+
   const getRecipeById = useCallback(async (id: string): Promise<Recipe | undefined> => {
     const localRecipe = recipes.find(recipe => recipe.id === id);
     if (localRecipe) {
@@ -84,5 +98,5 @@ export function useRecipes() {
     }
   }, [user]);
 
-  return { recipes, addRecipe, getRecipeById, deleteRecipe, isLoading };
+  return { recipes, addRecipe, updateRecipe, getRecipeById, deleteRecipe, isLoading };
 }

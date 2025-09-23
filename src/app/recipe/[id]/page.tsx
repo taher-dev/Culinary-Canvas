@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, ChefHat, Clock, ExternalLink, Trash2, Users } from 'lucide-react';
+import { ArrowLeft, ChefHat, Clock, ExternalLink, Pencil, Trash2, Users } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useEffect, useState } from 'react';
 import type { Recipe } from '@/lib/types';
@@ -77,12 +77,20 @@ export default function RecipeDetailPage() {
 
   return (
     <div className="container mx-auto max-w-4xl py-8 px-2 sm:px-6 md:px-8">
-      <Button variant="ghost" asChild className='-ml-4 mb-8'>
-        <Link href="/" className='flex items-center gap-2'>
-          <ArrowLeft className="h-4 w-4" />
-          Back to All Recipes
-        </Link>
-      </Button>
+      <div className="flex justify-between items-center mb-8 -ml-4 -mr-2">
+        <Button variant="ghost" asChild>
+          <Link href="/" className='flex items-center gap-2'>
+            <ArrowLeft className="h-4 w-4" />
+            Back to All Recipes
+          </Link>
+        </Button>
+        <Button variant="outline" size="icon" asChild>
+            <Link href={`/recipe/${recipe.id}/edit`}>
+                <Pencil className="h-4 w-4" />
+                <span className="sr-only">Edit Recipe</span>
+            </Link>
+        </Button>
+      </div>
 
       <article>
         <div className="relative mb-6 aspect-[16/9] w-full overflow-hidden rounded-lg shadow-lg">

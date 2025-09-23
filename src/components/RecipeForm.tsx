@@ -19,7 +19,7 @@ import { useRecipes } from '@/hooks/use-recipes';
 import { useRouter } from 'next/navigation';
 import { PlusCircle, Trash2, Camera, Replace, X } from 'lucide-react';
 import Image from 'next/image';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { fetchThumbnailAction } from '@/app/add/actions';
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from '@/hooks/use-auth';
@@ -49,14 +49,28 @@ const recipeFormSchema = z.object({
 
 type RecipeFormValues = z.infer<typeof recipeFormSchema>;
 
-export default function RecipeForm() {
+interface RecipeFormProps {
+    initialData?: Recipe | null;
+}
+
+const parseTimeString = (timeString: string) => {
+    const hoursMatch = timeString.match(/(\d+)\s*h/);
+    const minutesMatch = timeString.match(/(\d+)\s*min/);
+    return {
+        hours: hoursMatch ? parseInt(hoursMatch[1], 10) : 0,
+        minutes: minutesMatch ? parseInt(minutesMatch[1], 10) : 0,
+    };
+};
+
+export default function RecipeForm({ initialData }: RecipeFormProps) {
   const router = useRouter();
-  const { addRecipe } = useRecipes();
+  const { addRecipe, updateRecipe } = useRecipes();
   const { user } = useAuth();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  
+  const isEditMode = !!initialData;
 
   const form = useForm<RecipeFormValues>({
     resolver: zodResolver(recipeFormSchema),
@@ -73,6 +87,19 @@ export default function RecipeForm() {
       thumbnailUrl: '',
     },
   });
+
+  useEffect(() => {
+    if (initialData) {
+      const { time, ...rest } = initialData;
+      form.reset({
+        ...rest,
+        time: parseTimeString(time),
+      });
+      if (initialData.image) {
+        setImagePreview(initialData.image);
+      }
+    }
+  }, [initialData, form]);
 
   const { fields: ingredientFields, append: appendIngredient, remove: removeIngredient } = useFieldArray({
     control: form.control,
@@ -130,7 +157,7 @@ export default function RecipeForm() {
     if (!user) {
       toast({
         title: "Authentication Error",
-        description: "You must be logged in to create a recipe.",
+        description: "You must be logged in to create or edit a recipe.",
         variant: "destructive",
       });
       return;
@@ -141,16 +168,25 @@ export default function RecipeForm() {
         data.time.minutes ? `${data.time.minutes}min` : ''
     ].filter(Boolean).join(' ');
     
-    const newRecipeData = {
-      ...data,
-      userId: user.uid,
-      image: imagePreview || '',
-      time: timeString,
-      ingredients: data.ingredients,
-    };
-    
-    await addRecipe(newRecipeData);
-    router.push('/');
+    if (isEditMode && initialData) {
+        const updatedRecipeData = {
+          ...initialData,
+          ...data,
+          image: imagePreview || '',
+          time: timeString,
+        };
+        await updateRecipe(initialData.id, updatedRecipeData);
+        router.push(`/recipe/${initialData.id}`);
+    } else {
+        const newRecipeData = {
+          ...data,
+          userId: user.uid,
+          image: imagePreview || '',
+          time: timeString,
+        };
+        await addRecipe(newRecipeData);
+        router.push('/');
+    }
   }
 
   return (
@@ -376,11 +412,9 @@ export default function RecipeForm() {
 
 
         <Button type="submit" size="lg" className="w-full" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Saving...' : 'Save Recipe'}
+          {form.formState.isSubmitting ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Save Recipe')}
         </Button>
       </form>
     </Form>
   );
 }
-
-    
