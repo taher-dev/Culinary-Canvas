@@ -49,7 +49,9 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8 border">
-                      <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                      <AvatarFallback>
+                        {user.isAnonymous ? 'G' : user.email?.[0].toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
@@ -58,7 +60,7 @@ export function Header() {
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">My Account</p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
+                        {user.isAnonymous ? "Guest account" : user.email}
                       </p>
                     </div>
                   </DropdownMenuLabel>
