@@ -63,12 +63,6 @@ export default function LoginPage() {
         case 'auth/weak-password':
             errorMessage = 'Password should be at least 6 characters.';
             break;
-        case 'auth/operation-not-allowed':
-            errorMessage = 'Email/password accounts are not enabled. Please enable it in your Firebase project settings.';
-            break;
-        case 'auth/unauthorized-domain':
-            errorMessage = "This domain is not authorized for OAuth operations. Please add it to the list of authorized domains in your Firebase project's authentication settings.";
-            break;
         default:
             console.error(authError.code, authError.message);
       }
@@ -95,7 +89,7 @@ export default function LoginPage() {
         } else if (authError.code === 'auth/operation-not-allowed') {
             description = 'Google Sign-In is not enabled. Please enable it in your Firebase project settings.';
         } else if (authError.code === 'auth/unauthorized-domain') {
-            description = "This domain is not authorized for OAuth operations. Please add it to the list of authorized domains in your Firebase project's authentication settings.";
+            description = "This domain is not authorized for OAuth operations. Please go to the Firebase console and add your app's domain to the list of authorized domains in the Authentication > Settings > Authorized domains section.";
         }
         toast({
             title: "Google Sign-In Failed",
