@@ -89,7 +89,7 @@ export default function LoginPage() {
         } else if (authError.code === 'auth/operation-not-allowed') {
             description = 'Google Sign-In is not enabled. Please enable it in your Firebase project settings.';
         } else if (authError.code === 'auth/unauthorized-domain') {
-            description = "This domain is not authorized for OAuth operations. Please go to the Firebase console and add your app's domain to the list of authorized domains in the Authentication > Settings > Authorized domains section.";
+            description = "This domain is not authorized for OAuth operations. Go to the Firebase console > Authentication > Settings > Authorized domains and add your app's domain.";
         }
         toast({
             title: "Google Sign-In Failed",
