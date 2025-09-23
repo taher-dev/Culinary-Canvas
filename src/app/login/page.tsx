@@ -195,7 +195,7 @@ export default function LoginPage() {
             )}
           </div>
           
-          {!user?.isAnonymous && (
+          {(!user || user.isAnonymous) && (
              <div className="mt-4 text-center text-sm">
                 {isSigningUp ? 'Already have an account?' : "Don't have an account?"}
                 <Button
