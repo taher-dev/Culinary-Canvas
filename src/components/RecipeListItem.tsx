@@ -17,19 +17,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { useRecipes } from '@/hooks/use-recipes';
 import { useState } from 'react';
 
 interface RecipeListItemProps {
   recipe: Recipe;
+  onDelete: (id: string) => Promise<void>;
 }
 
-export default function RecipeListItem({ recipe }: RecipeListItemProps) {
-  const { deleteRecipe } = useRecipes();
+export default function RecipeListItem({ recipe, onDelete }: RecipeListItemProps) {
   const [isHovering, setIsHovering] = useState(false);
   
   const confirmDelete = async () => {
-    await deleteRecipe(recipe.id);
+    await onDelete(recipe.id);
   };
 
   return (

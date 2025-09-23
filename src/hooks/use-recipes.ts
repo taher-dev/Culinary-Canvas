@@ -11,6 +11,7 @@ export function useRecipes() {
   const { user } = useAuth();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -90,13 +91,16 @@ export function useRecipes() {
       console.error('No user logged in to delete recipe');
       return;
     }
+    setIsDeleting(true);
     try {
       await deleteDoc(doc(db, 'recipes', recipeId));
       setRecipes(prev => prev.filter(recipe => recipe.id !== recipeId));
     } catch (error) {
       console.error('Failed to delete recipe from Firestore', error);
+    } finally {
+      setIsDeleting(false);
     }
   }, [user]);
 
-  return { recipes, addRecipe, updateRecipe, getRecipeById, deleteRecipe, isLoading };
+  return { recipes, addRecipe, updateRecipe, getRecipeById, deleteRecipe, isLoading, isDeleting };
 }

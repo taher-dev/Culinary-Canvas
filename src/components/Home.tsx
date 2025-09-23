@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useRecipes } from '@/hooks/use-recipes';
 import RecipeCard from '@/components/RecipeCard';
-import { LayoutGrid, List, PlusCircle } from 'lucide-react';
+import { LayoutGrid, List, PlusCircle, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import RecipeListItem from './RecipeListItem';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function Home() {
   const { user } = useAuth();
-  const { recipes, isLoading } = useRecipes();
+  const { recipes, isLoading, isDeleting, deleteRecipe } = useRecipes();
   const [view, setView] = useState<'card' | 'list'>('card');
 
   const toggleView = () => {
@@ -29,6 +29,15 @@ export default function Home() {
         </Button>
       </div>
     )
+  }
+  
+  if (isDeleting) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Deleting recipe...</p>
+      </div>
+    );
   }
 
   return (
@@ -70,13 +79,13 @@ export default function Home() {
         view === 'card' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {recipes.map((recipe) => (
-                <RecipeCard key={recipe.id} recipe={recipe} />
+                <RecipeCard key={recipe.id} recipe={recipe} onDelete={deleteRecipe} />
             ))}
             </div>
         ) : (
             <div className="space-y-4">
                 {recipes.map(recipe => (
-                    <RecipeListItem key={recipe.id} recipe={recipe} />
+                    <RecipeListItem key={recipe.id} recipe={recipe} onDelete={deleteRecipe}/>
                 ))}
             </div>
         )
