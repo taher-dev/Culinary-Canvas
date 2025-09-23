@@ -2,9 +2,11 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User, signOut as firebaseSignOut, GoogleAuthProvider, signInWithPopup, signInAnonymously } from 'firebase/auth';
+import { onAuthStateChanged, User, signOut as firebaseSignOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { signInAnonymously as firebaseSignInAnonymously } from 'firebase/auth';
+
 
 interface AuthContextType {
   user: User | null;
@@ -20,15 +22,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
+      // If user is logged in and on the login page, redirect them to home
+      if (user && pathname === '/login') {
+        router.push('/');
+      }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router, pathname]);
 
   const signOut = async () => {
     try {
@@ -51,7 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInAnonymously = async () => {
     try {
-      await signInAnonymously(auth);
+      await firebaseSignInAnonymously(auth);
     } catch (error) {
       console.error('Error signing in anonymously:', error);
       throw error;
