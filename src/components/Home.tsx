@@ -9,14 +9,22 @@ import { LayoutGrid, List, PlusCircle, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import RecipeListItem from './RecipeListItem';
 import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const { user } = useAuth();
   const { recipes, isLoading, isDeleting, deleteRecipe } = useRecipes();
   const [view, setView] = useState<'card' | 'list'>('card');
+  const [isNavigating, setIsNavigating] = useState(false);
+  const router = useRouter();
 
   const toggleView = () => {
     setView(prev => (prev === 'card' ? 'list' : 'card'));
+  };
+
+  const handleLoginClick = () => {
+    setIsNavigating(true);
+    router.push('/login');
   };
 
   if (!user && !isLoading) {
@@ -24,8 +32,15 @@ export default function Home() {
       <div className="container mx-auto px-2 py-8 sm:px-6 text-center">
         <h1 className="text-3xl font-bold font-headline text-foreground">Welcome to Culinary Canvas</h1>
         <p className="text-muted-foreground mt-2 mb-6">Please log in to manage your personal collection of culinary creations.</p>
-        <Button asChild>
-            <Link href="/login">Login</Link>
+        <Button onClick={handleLoginClick} disabled={isNavigating}>
+            {isNavigating ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Please wait
+                </>
+            ) : (
+                'Login'
+            )}
         </Button>
       </div>
     )
