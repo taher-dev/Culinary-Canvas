@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChefHat } from 'lucide-react';
+import { ChefHat, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import {
@@ -14,10 +14,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 
 export function Header() {
   const { user, signOut } = useAuth();
+  const [isNavigating, setIsNavigating] = useState(false);
+  const router = useRouter();
+
+  const handleLoginClick = () => {
+    setIsNavigating(true);
+    router.push('/login');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -54,8 +63,15 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-                <Button asChild variant="outline">
-                    <Link href="/login">Login</Link>
+                <Button variant="outline" onClick={handleLoginClick} disabled={isNavigating}>
+                    {isNavigating ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Please wait
+                        </>
+                    ) : (
+                        'Login'
+                    )}
                 </Button>
             )}
         </div>
