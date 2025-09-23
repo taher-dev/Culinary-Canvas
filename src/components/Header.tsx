@@ -15,13 +15,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 
 export function Header() {
   const { user, signOut } = useAuth();
   const [isNavigating, setIsNavigating] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLoginClick = () => {
     setIsNavigating(true);
@@ -63,16 +64,18 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-                <Button variant="outline" onClick={handleLoginClick} disabled={isNavigating}>
-                    {isNavigating ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Please wait
-                        </>
-                    ) : (
-                        'Login'
-                    )}
-                </Button>
+                pathname !== '/login' && (
+                    <Button variant="outline" onClick={handleLoginClick} disabled={isNavigating}>
+                        {isNavigating ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Please wait
+                            </>
+                        ) : (
+                            'Login'
+                        )}
+                    </Button>
+                )
             )}
         </div>
       </div>
