@@ -36,8 +36,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
-      // If user is logged in and on the login page, redirect them to home
-      if (user && pathname === '/login') {
+      // If a non-anonymous user is logged in and on the login page, redirect them to home
+      if (user && !user.isAnonymous && pathname === '/login') {
         router.push('/');
       }
     });
