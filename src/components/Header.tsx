@@ -58,13 +58,20 @@ export function Header() {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">My Account</p>
+                      <p className="text-sm font-medium leading-none">
+                        {user.isAnonymous ? 'Guest Account' : 'My Account'}
+                      </p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        {user.isAnonymous ? "Guest account" : user.email}
+                        {user.isAnonymous ? "Sign up to save your recipes" : user.email}
                       </p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {user.isAnonymous && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/login">Sign Up / Log In</Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={signOut}>
                     Log out
                   </DropdownMenuItem>

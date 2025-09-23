@@ -2,9 +2,18 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User, signOut as firebaseSignOut, GoogleAuthProvider, signInWithPopup, signInAnonymously as firebaseSignInAnonymously } from 'firebase/auth';
+import { 
+    onAuthStateChanged, 
+    User, 
+    signOut as firebaseSignOut, 
+    GoogleAuthProvider, 
+    signInWithPopup, 
+    signInAnonymously as firebaseSignInAnonymously,
+    linkWithCredential
+} from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { usePathname, useRouter } from 'next/navigation';
+import { useToast } from './use-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -21,6 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -48,7 +58,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const currentUser = auth.currentUser;
+      if (currentUser && currentUser.isAnonymous) {
+        // Link the anonymous account with the Google account
+        const result = await signInWithPopup(currentUser, provider);
+        toast({ title: "Account linked with Google!", description: "Your guest data has been saved." });
+      } else {
+        // Standard sign-in with Google
+        await signInWithPopup(auth, provider);
+      }
       // Redirection is handled by onAuthStateChanged
     } catch (error) {
       console.error('Error signing in with Google:', error);

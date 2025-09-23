@@ -3,7 +3,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, AuthError } from 'firebase/auth';
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    AuthError,
+    EmailAuthProvider,
+    linkWithCredential
+} from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,19 +37,28 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { signInWithGoogle, signInAnonymously } = useAuth();
+  const { user, signInWithGoogle, signInAnonymously } = useAuth();
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      if (isSigningUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
-        toast({ title: "Account created successfully!", description: "You've been logged in." });
+      const currentUser = auth.currentUser;
+      if (currentUser && currentUser.isAnonymous) {
+        // Link anonymous account to a permanent one
+        const credential = EmailAuthProvider.credential(email, password);
+        await linkWithCredential(currentUser, credential);
+        toast({ title: "Account linked successfully!", description: "Your guest data has been saved." });
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
-        toast({ title: "Login successful!", description: "Welcome back." });
+        // Standard sign-in or sign-up
+        if (isSigningUp) {
+          await createUserWithEmailAndPassword(auth, email, password);
+          toast({ title: "Account created successfully!", description: "You've been logged in." });
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+          toast({ title: "Login successful!", description: "Welcome back." });
+        }
       }
       // Redirection will be handled by the useAuth hook
     } catch (error) {
@@ -58,6 +73,7 @@ export default function LoginPage() {
           errorMessage = 'Invalid email or password.';
           break;
         case 'auth/email-already-in-use':
+        case 'auth/credential-already-in-use':
           errorMessage = 'This email is already in use. Please log in or use a different email.';
           break;
         case 'auth/weak-password':
@@ -86,6 +102,8 @@ export default function LoginPage() {
         let description = "Could not sign in with Google. Please try again.";
         if (authError.code === 'auth/popup-closed-by-user') {
             description = "The sign-in popup was closed before completing. Please try again.";
+        } else if (authError.code === 'auth/credential-already-in-use') {
+            description = "This Google account is already linked to another user. Please sign in with your original method.";
         }
         toast({
             title: "Google Sign-In Failed",
@@ -121,10 +139,10 @@ export default function LoginPage() {
                 <ChefHat className="h-10 w-10 text-primary" />
             </div>
           <CardTitle className="text-2xl font-bold font-headline">
-            {isSigningUp ? 'Create an Account' : 'Welcome Back'}
+            {user?.isAnonymous ? 'Save Your Progress' : (isSigningUp ? 'Create an Account' : 'Welcome Back')}
           </CardTitle>
           <CardDescription>
-            {isSigningUp ? 'Enter your details to get started.' : 'Log in to access your culinary canvas.'}
+            {user?.isAnonymous ? 'Create an account to save your recipes permanently.' : (isSigningUp ? 'Enter your details to get started.' : 'Log in to access your culinary canvas.')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -154,7 +172,7 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Processing...' : (isSigningUp ? 'Sign Up' : 'Log In')}
+              {isLoading ? 'Processing...' : (isSigningUp ? 'Sign Up' : (user?.isAnonymous ? 'Link Account' : 'Log In'))}
             </Button>
           </form>
 
@@ -167,24 +185,28 @@ export default function LoginPage() {
           <div className="space-y-2">
             <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
               <GoogleIcon className="mr-2 h-5 w-5" />
-              Sign in with Google
+              {user?.isAnonymous ? 'Link with Google' : 'Sign in with Google'}
             </Button>
-            <Button variant="outline" className="w-full" onClick={handleAnonymousSignIn} disabled={isLoading}>
-              <User className="mr-2 h-5 w-5" />
-              Continue as Guest
-            </Button>
+            {!user?.isAnonymous && (
+              <Button variant="outline" className="w-full" onClick={handleAnonymousSignIn} disabled={isLoading}>
+                <User className="mr-2 h-5 w-5" />
+                Continue as Guest
+              </Button>
+            )}
           </div>
-
-          <div className="mt-4 text-center text-sm">
-            {isSigningUp ? 'Already have an account?' : "Don't have an account?"}
-            <Button
-              variant="link"
-              className="pl-1"
-              onClick={() => setIsSigningUp(!isSigningUp)}
-            >
-              {isSigningUp ? 'Log In' : 'Sign Up'}
-            </Button>
-          </div>
+          
+          {!user?.isAnonymous && (
+             <div className="mt-4 text-center text-sm">
+                {isSigningUp ? 'Already have an account?' : "Don't have an account?"}
+                <Button
+                variant="link"
+                className="pl-1"
+                onClick={() => setIsSigningUp(!isSigningUp)}
+                >
+                {isSigningUp ? 'Log In' : 'Sign Up'}
+                </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
