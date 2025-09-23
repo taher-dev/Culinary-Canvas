@@ -86,10 +86,6 @@ export default function LoginPage() {
         let description = "Could not sign in with Google. Please try again.";
         if (authError.code === 'auth/popup-closed-by-user') {
             description = "The sign-in popup was closed before completing. Please try again.";
-        } else if (authError.code === 'auth/operation-not-allowed') {
-            description = 'Google Sign-In is not enabled. Please enable it in your Firebase project settings.';
-        } else if (authError.code === 'auth/unauthorized-domain') {
-            description = "This domain is not authorized for OAuth operations. Go to the Firebase console > Authentication > Settings > Authorized domains and add your app's domain.";
         }
         toast({
             title: "Google Sign-In Failed",
@@ -107,14 +103,9 @@ export default function LoginPage() {
         await signInAnonymously();
         // Redirection handled by useAuth hook
     } catch (error) {
-        const authError = error as AuthError;
-        let description = "Could not sign in as a guest. Please try again.";
-        if (authError.code === 'auth/operation-not-allowed') {
-            description = 'Anonymous Sign-In is not enabled. Please enable it in your Firebase project settings.';
-        }
         toast({
             title: "Anonymous Sign-In Failed",
-            description,
+            description: "Could not sign in as a guest. Please try again.",
             variant: "destructive",
         });
     } finally {
