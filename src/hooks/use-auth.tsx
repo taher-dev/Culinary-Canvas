@@ -2,11 +2,9 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User, signOut as firebaseSignOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { onAuthStateChanged, User, signOut as firebaseSignOut, GoogleAuthProvider, signInWithPopup, signInAnonymously as firebaseSignInAnonymously } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { usePathname, useRouter } from 'next/navigation';
-import { signInAnonymously as firebaseSignInAnonymously } from 'firebase/auth';
-
 
 interface AuthContextType {
   user: User | null;
@@ -40,6 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       await firebaseSignOut(auth);
+      // Redirect to login page after sign out to clear state
       router.push('/login');
     } catch (error) {
       console.error('Error signing out:', error);
@@ -50,24 +49,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
+      // Redirection is handled by onAuthStateChanged
     } catch (error) {
       console.error('Error signing in with Google:', error);
-      throw error;
+      throw error; // Re-throw to be caught in the component
     }
   };
 
   const signInAnonymously = async () => {
     try {
       await firebaseSignInAnonymously(auth);
+      // Redirection is handled by onAuthStateChanged
     } catch (error) {
       console.error('Error signing in anonymously:', error);
-      throw error;
+      throw error; // Re-throw to be caught in the component
     }
   };
 
   return (
     <AuthContext.Provider value={{ user, loading, signOut, signInWithGoogle, signInAnonymously }}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

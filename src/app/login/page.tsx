@@ -45,7 +45,7 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, email, password);
         toast({ title: "Login successful!", description: "Welcome back." });
       }
-      router.push('/');
+      // Redirection will be handled by the useAuth hook
     } catch (error) {
       const authError = error as AuthError;
       let errorMessage = 'An unexpected error occurred. Please try again.';
@@ -83,11 +83,16 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
         await signInWithGoogle();
-        router.push('/');
+        // Redirection handled by useAuth hook
     } catch (error) {
+        const authError = error as AuthError;
+        let description = "Could not sign in with Google. Please try again.";
+        if (authError.code === 'auth/popup-closed-by-user') {
+            description = "The sign-in popup was closed before completing. Please try again.";
+        }
         toast({
             title: "Google Sign-In Failed",
-            description: "Could not sign in with Google. Please try again.",
+            description,
             variant: "destructive",
         });
     } finally {
@@ -99,7 +104,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
         await signInAnonymously();
-        router.push('/');
+        // Redirection handled by useAuth hook
     } catch (error) {
         toast({
             title: "Anonymous Sign-In Failed",
@@ -136,6 +141,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -147,6 +153,7 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete={isSigningUp ? 'new-password' : 'current-password'}
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
