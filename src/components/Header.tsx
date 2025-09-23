@@ -13,16 +13,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Avatar, AvatarFallback } from './ui/avatar';
 import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 
 export function Header() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    // Reset navigation state whenever the path changes
+    setIsNavigating(false);
+  }, [pathname]);
 
   const handleLoginClick = () => {
+    setIsNavigating(true);
     router.push('/login');
   };
 
@@ -62,8 +70,8 @@ export function Header() {
               </DropdownMenu>
             ) : (
                 pathname !== '/login' && (
-                    <Button variant="outline" onClick={handleLoginClick}>
-                        Login
+                    <Button variant="outline" onClick={handleLoginClick} disabled={isNavigating}>
+                        {isNavigating ? <Loader2 className="animate-spin" /> : 'Login'}
                     </Button>
                 )
             )}
