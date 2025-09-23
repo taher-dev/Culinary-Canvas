@@ -9,7 +9,7 @@ import {
     GoogleAuthProvider, 
     signInWithPopup, 
     signInAnonymously as firebaseSignInAnonymously,
-    linkWithCredential
+    linkWithPopup
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { usePathname, useRouter } from 'next/navigation';
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const currentUser = auth.currentUser;
       if (currentUser && currentUser.isAnonymous) {
         // Link the anonymous account with the Google account
-        const result = await signInWithPopup(currentUser, provider);
+        await linkWithPopup(currentUser, provider);
         toast({ title: "Account linked with Google!", description: "Your guest data has been saved." });
       } else {
         // Standard sign-in with Google
