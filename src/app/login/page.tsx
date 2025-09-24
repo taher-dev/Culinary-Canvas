@@ -3,19 +3,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    type AuthError,
-    EmailAuthProvider,
-    linkWithCredential
-} from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
 import { ChefHat, Loader2, User } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Separator } from '@/components/ui/separator';
@@ -34,211 +25,124 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSigningUp, setIsSigningUp] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSwitchingToLogin, setIsSwitchingToLogin] = useState(false);
   const router = useRouter();
-  const { toast } = useToast();
-  const { user, signInWithGoogle, signInAnonymously, signOut } = useAuth();
+  const { user, signInWithGoogle, signInAnonymously, signInWithEmail, signUpWithEmail, isLoading } = useAuth();
+  
+  // This state helps differentiate a user who is a guest and wants to log in vs just being a guest.
+  const [isSwitchingToLogin, setIsSwitchingToLogin] = useState(false);
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    try {
-        if (user?.isAnonymous) {
-            const credential = EmailAuthProvider.credential(email, password);
-            await linkWithCredential(user, credential);
-            toast({ title: "Account created successfully!", description: "Your guest data has been saved." });
-        } else {
-            if (user) {
-                await signOut();
-            }
-            if (isSigningUp) {
-                await createUserWithEmailAndPassword(auth, email, password);
-                toast({ title: "Account created successfully!", description: "You've been logged in." });
-            } else {
-                await signInWithEmailAndPassword(auth, email, password);
-                toast({ title: "Login successful!", description: "Welcome back." });
-            }
-        }
-    } catch (error) {
-        const authError = error as AuthError;
-        let errorMessage = 'An unexpected error occurred. Please try again.';
-        switch (authError.code) {
-            case 'auth/invalid-email':
-                errorMessage = 'Please enter a valid email address.';
-                break;
-            case 'auth/wrong-password':
-            case 'auth/invalid-credential':
-                errorMessage = 'Invalid email or password.';
-                break;
-            case 'auth/email-already-in-use':
-            case 'auth/credential-already-in-use':
-                errorMessage = 'This email is already in use. Please log in.';
-                setIsSigningUp(false); 
-                break;
-            case 'auth/weak-password':
-                errorMessage = 'Password should be at least 6 characters.';
-                break;
-            default:
-                console.error(authError.code, authError.message);
-        }
-        toast({
-            title: `Authentication Failed`,
-            description: errorMessage,
-            variant: 'destructive',
-        });
-    } finally {
-        setIsLoading(false);
-    }
-};
-
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    try {
-        if (user) {
-            await signOut();
-        }
-        await signInWithGoogle();
-        toast({ title: "Successfully signed in with Google!" });
-    } catch (error) {
-        const authError = error as AuthError;
-        let description = "Could not sign in with Google. Please try again.";
-        
-        if (authError.code === 'auth/popup-closed-by-user') {
-            description = "The sign-in popup was closed before completing. Please try again.";
-        } else if (authError.code === 'auth/credential-already-in-use') {
-            description = "This Google account is already linked to another user.";
-        } else if (authError.code !== 'auth/account-exists-with-different-credential') {
-             console.error("Google Sign-In Error:", authError);
-             toast({
-                title: "Google Sign-In Failed",
-                description,
-                variant: "destructive",
-            });
-        }
-    } finally {
-        setIsLoading(false);
+    if (isSigningUp) {
+      await signUpWithEmail(email, password);
+    } else {
+      await signInWithEmail(email, password);
     }
   };
-
+  
   const handleAnonymousSignIn = async () => {
     if (user?.isAnonymous) {
+        // If already a guest, just go back to the app.
         router.push('/');
         return;
     }
-    setIsLoading(true);
-    try {
-        await signInAnonymously();
-    } catch (error) {
-        toast({
-            title: "Anonymous Sign-In Failed",
-            description: "Could not sign in as a guest. Please try again.",
-            variant: "destructive",
-        });
-    } finally {
-        setIsLoading(false);
-    }
+    await signInAnonymously();
   };
 
-  const handleLoginExisting = () => {
-    setIsSwitchingToLogin(true);
-  };
-  
   const isGuestMode = !!user?.isAnonymous && !isSwitchingToLogin;
 
   return (
-    <>
-        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-        <Card className="w-full max-w-sm">
-            <CardHeader className="text-center">
-                <div className="flex justify-center mb-2">
-                    <ChefHat className="h-10 w-10 text-primary" />
-                </div>
-            <CardTitle className="text-2xl font-bold font-headline">
-                {isGuestMode ? 'Save Your Progress' : (isSigningUp ? 'Create an Account' : 'Welcome Back')}
-            </CardTitle>
-            <CardDescription>
-                {isGuestMode ? 'Create an account to save your recipes permanently.' : (isSigningUp ? 'Enter your details to get started.' : 'Log in to access your culinary canvas.')}
-            </CardDescription>
-            </CardHeader>
-            <CardContent>
-            <form onSubmit={handleAuthAction} className="space-y-4">
-                <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
-                />
-                </div>
-                <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    placeholder="Enter your password"
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete={isSigningUp ? 'new-password' : 'current-password'}
-                />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? <Loader2 className="animate-spin" /> : (isGuestMode ? 'Save & Create Account' : (isSigningUp ? 'Sign Up' : 'Log In'))}
-                </Button>
-            </form>
-
-            <div className="my-4 flex items-center">
-                <Separator className="flex-1" />
-                <span className="mx-4 text-xs text-muted-foreground">OR</span>
-                <Separator className="flex-1" />
-            </div>
-
+    <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-2">
+            <ChefHat className="h-10 w-10 text-primary" />
+          </div>
+          <CardTitle className="text-2xl font-bold font-headline">
+            {isGuestMode ? 'Save Your Progress' : (isSigningUp ? 'Create an Account' : 'Welcome Back')}
+          </CardTitle>
+          <CardDescription>
+            {isGuestMode ? 'Create an account to save your recipes permanently.' : (isSigningUp ? 'Enter your details to get started.' : 'Log in to access your culinary canvas.')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleAuthAction} className="space-y-4">
             <div className="space-y-2">
-                <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
-                {isLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon className="mr-2 h-5 w-5" />
-                {isGuestMode ? 'Link with Google' : 'Sign in with Google'}</>}
-                </Button>
-                {!isGuestMode && (
-                <Button variant="outline" className="w-full" onClick={handleAnonymousSignIn} disabled={isLoading}>
-                    {isLoading ? <Loader2 className="animate-spin" /> : <><User className="mr-2 h-5 w-5" />
-                    Continue as Guest</>}
-                </Button>
-                )}
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
             </div>
-            
-            {isGuestMode ? (
-                <div className="mt-4 text-center text-sm">
-                    Already have an account?
-                    <Button
-                        variant="link"
-                        className="pl-1"
-                        onClick={handleLoginExisting}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? <Loader2 className="animate-spin" /> : 'Log In'}
-                    </Button>
-                </div>
-            ) : (
-                <div className="mt-4 text-center text-sm">
-                    {isSigningUp ? 'Already have an account?' : "Don't have an account?"}
-                    <Button
-                    variant="link"
-                    className="pl-1"
-                    onClick={() => setIsSigningUp(!isSigningUp)}
-                    >
-                    {isSigningUp ? 'Log In' : 'Sign Up'}
-                    </Button>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                placeholder="Enter your password"
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete={isSigningUp ? 'new-password' : 'current-password'}
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? <Loader2 className="animate-spin" /> : (isGuestMode ? 'Save & Create Account' : (isSigningUp ? 'Sign Up' : 'Log In'))}
+            </Button>
+          </form>
+
+          <div className="my-4 flex items-center">
+            <Separator className="flex-1" />
+            <span className="mx-4 text-xs text-muted-foreground">OR</span>
+            <Separator className="flex-1" />
+          </div>
+
+          <div className="space-y-2">
+            <Button variant="outline" className="w-full" onClick={signInWithGoogle} disabled={isLoading}>
+              {isLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon className="mr-2 h-5 w-5" />
+              {isGuestMode ? 'Link with Google' : 'Sign in with Google'}</>}
+            </Button>
+            {!isGuestMode && (
+              <Button variant="outline" className="w-full" onClick={handleAnonymousSignIn} disabled={isLoading}>
+                {isLoading ? <Loader2 className="animate-spin" /> : <><User className="mr-2 h-5 w-5" />
+                Continue as Guest</>}
+              </Button>
             )}
-            </CardContent>
-        </Card>
-        </div>
-    </>
+          </div>
+          
+          {isGuestMode ? (
+              <div className="mt-4 text-center text-sm">
+                  Already have an account?
+                  <Button
+                      variant="link"
+                      className="pl-1"
+                      onClick={() => setIsSwitchingToLogin(true)}
+                      disabled={isLoading}
+                  >
+                      {isLoading ? <Loader2 className="animate-spin" /> : 'Log In'}
+                  </Button>
+              </div>
+          ) : (
+              <div className="mt-4 text-center text-sm">
+                  {isSigningUp ? 'Already have an account?' : "Don't have an account?"}
+                  <Button
+                  variant="link"
+                  className="pl-1"
+                  onClick={() => setIsSigningUp(!isSigningUp)}
+                  >
+                  {isSigningUp ? 'Log In' : 'Sign Up'}
+                  </Button>
+              </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
+
+    
