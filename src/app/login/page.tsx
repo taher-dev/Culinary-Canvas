@@ -46,13 +46,11 @@ export default function LoginPage() {
 
     try {
         if (user?.isAnonymous) {
-            // If the current user is a guest, link their account.
             const credential = EmailAuthProvider.credential(email, password);
             await linkWithCredential(user, credential);
             toast({ title: "Account created successfully!", description: "Your guest data has been saved." });
         } else {
-            // If another user is logged in, sign them out first.
-            if (user && !isSwitchingToLogin) {
+            if (user) {
                 await signOut();
             }
             if (isSigningUp) {
@@ -76,7 +74,8 @@ export default function LoginPage() {
                 break;
             case 'auth/email-already-in-use':
             case 'auth/credential-already-in-use':
-                errorMessage = 'This email is already in use. Please log in or use a different email.';
+                errorMessage = 'This email is already in use. Please log in.';
+                setIsSigningUp(false); 
                 break;
             case 'auth/weak-password':
                 errorMessage = 'Password should be at least 6 characters.';
@@ -97,11 +96,9 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-        // If a user is already logged in (guest or another user), sign them out first.
         if (user) {
             await signOut();
         }
-        // Proceed with Google sign-in.
         await signInWithGoogle();
         toast({ title: "Successfully signed in with Google!" });
     } catch (error) {
@@ -113,7 +110,6 @@ export default function LoginPage() {
         } else if (authError.code === 'auth/credential-already-in-use') {
             description = "This Google account is already linked to another user.";
         } else if (authError.code !== 'auth/account-exists-with-different-credential') {
-            // Don't show a toast for the credential conflict, as it's handled in useAuth
              console.error("Google Sign-In Error:", authError);
              toast({
                 title: "Google Sign-In Failed",
