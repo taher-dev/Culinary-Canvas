@@ -12,7 +12,8 @@ import {
     linkWithPopup,
     AuthError,
     signInWithEmailAndPassword,
-    linkWithCredential
+    linkWithCredential,
+    EmailAuthProvider
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { usePathname, useRouter } from 'next/navigation';
@@ -36,31 +37,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        setLoading(false);
-        // If a non-anonymous user is logged in and on the login page, redirect them to home
-        if (!user.isAnonymous && pathname === '/login') {
-          router.push('/');
-        }
-      } else {
-        // If there's no user and we are not on the login page, sign in as guest
-        if (pathname !== '/login') {
-            firebaseSignInAnonymously(auth).catch((error) => {
-                console.error("Anonymous sign-in failed", error);
-                setLoading(false);
-            });
-        } else {
-            // If on login page, just update loading state
-            setUser(null);
-            setLoading(false);
-        }
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (loading) setLoading(false);
+      
+      // If a non-anonymous user is on the login page, redirect them home.
+      if (currentUser && !currentUser.isAnonymous && pathname === '/login') {
+        router.push('/');
+      }
+
+      // If there's no user and we're not on the login page, sign in as a guest.
+      if (!currentUser && pathname !== '/login') {
+        firebaseSignInAnonymously(auth).catch((error) => {
+          console.error("Anonymous sign-in failed", error);
+        });
       }
     });
 
     return () => unsubscribe();
-  }, [router, pathname]);
+  }, [router, pathname, loading]);
 
   const signOut = async () => {
     try {
@@ -75,12 +70,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      // Standard sign-in with Google
-      const result = await signInWithPopup(auth, provider);
-      setUser(result.user);
+      if (user?.isAnonymous) {
+          await linkWithPopup(user, provider);
+      } else {
+        await signInWithPopup(auth, provider);
+      }
     } catch (error) {
-      // Re-throw the error to be handled by the calling component (LoginPage)
-      // This allows the UI to handle specific flows like account linking.
       throw error;
     }
   };
@@ -88,10 +83,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInAnonymously = async () => {
     try {
       await firebaseSignInAnonymously(auth);
-      // Redirection is handled by onAuthStateChanged
     } catch (error) {
       console.error('Error signing in anonymously:', error);
-      throw error; // Re-throw to be caught in the component
+      throw error;
     }
   };
 
