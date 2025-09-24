@@ -27,12 +27,12 @@ export default function LoginPage() {
   const { user, signInWithGoogle, signInAnonymously, signInWithEmail, signUpWithEmail, isLoading } = useAuth();
   const router = useRouter();
 
-  // This state tracks whether the user wants to sign up or log in.
-  // We default to 'login' and simplify the logic.
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-
   // A user is in "guest mode" if they are anonymous.
   const isGuestMode = !!user?.isAnonymous;
+
+  // This state tracks whether the user wants to sign up or log in.
+  // For guests, we default to 'signup'. For others, we default to 'login'.
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>(isGuestMode ? 'signup' : 'login');
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +52,20 @@ export default function LoginPage() {
     // Otherwise, create a new guest session.
     await signInAnonymously();
   };
+  
+  const getTitle = () => {
+    if (isGuestMode) {
+      return authMode === 'signup' ? 'Save Your Progress' : 'Log In to Existing Account';
+    }
+    return authMode === 'signup' ? 'Create an Account' : 'Welcome Back';
+  };
+
+  const getDescription = () => {
+     if (isGuestMode) {
+      return authMode === 'signup' ? 'Create an account to save your recipes permanently.' : 'Enter your credentials to access your saved recipes.';
+    }
+    return authMode === 'signup' ? 'Enter your details to get started.' : 'Log in to access your culinary canvas.';
+  }
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
@@ -61,10 +75,10 @@ export default function LoginPage() {
             <ChefHat className="h-10 w-10 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold font-headline">
-            {isGuestMode ? 'Save Your Progress' : (authMode === 'signup' ? 'Create an Account' : 'Welcome Back')}
+            {getTitle()}
           </CardTitle>
           <CardDescription>
-            {isGuestMode ? 'Sign up or log in to save your recipes.' : (authMode === 'signup' ? 'Enter your details to get started.' : 'Log in to access your culinary canvas.')}
+            {getDescription()}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -107,10 +121,10 @@ export default function LoginPage() {
           <div className="space-y-2">
             <Button variant="outline" className="w-full" onClick={signInWithGoogle} disabled={isLoading}>
               {isLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon className="mr-2 h-5 w-5" />
-              {isGuestMode ? 'Continue with Google' : 'Sign in with Google'}</>}
+              Continue with Google</>}
             </Button>
-            {/* Show guest button only if not already a guest */}
-            {!isGuestMode && (
+            {/* Show guest button only if not already a guest and not in signup mode */}
+            {!isGuestMode && authMode === 'login' && (
               <Button variant="outline" className="w-full" onClick={handleAnonymousSignIn} disabled={isLoading}>
                 {isLoading ? <Loader2 className="animate-spin" /> : <><User className="mr-2 h-5 w-5" />
                 Continue as Guest</>}
