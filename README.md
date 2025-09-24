@@ -35,7 +35,6 @@ This app provides a beautiful, card-based interface to create a visual library o
 * **Visual Dashboard:** Browse all your saved recipes in a clean, modern, and responsive card-based layout.
 * **Follow Along Mode:** Cook with ease using an integrated video player alongside a checklist for your recipe steps.
 * **Secure Authentication:** Robust user authentication system supporting multiple providers (Email/Password, Google).
-* **Unified Account Linking:** Sign in with any linked method to access the same account, thanks to a smart account linking system.
 * **Cloud Data Persistence:** Your recipe data is securely stored in the cloud with Firestore, accessible from any device.
 * **Full Responsiveness:** A mobile-first design ensures a seamless experience on desktops, tablets, and smartphones.
 
@@ -74,11 +73,11 @@ To get a local copy up and running, follow these simple steps.
 
 1.  **Clone the repository:**
     ```sh
-    git clone [https://github.com/your-username/my-cooking-history.git](https://github.com/your-username/my-cooking-history.git)
+    git clone [https://github.com/taher-dev/Culinary-Canvas.git](https://github.com/taher-dev/Culinary-Canvas.git)
     ```
 2.  **Navigate to the project directory:**
     ```sh
-    cd my-cooking-history
+    cd Culinary-Canvas
     ```
 3.  **Install NPM packages:**
     ```sh
@@ -101,17 +100,3 @@ To get a local copy up and running, follow these simple steps.
     npm run dev
     ```
     Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
-
----
-
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-## 📧 Contact
-
-Your Name - [@your_twitter](https://twitter.com/your_twitter) - email@example.com
-
-Project Link: [https://github.com/your-username/my-cooking-history](https://github.com/your-username/my-cooking-history)
