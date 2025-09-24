@@ -73,6 +73,7 @@ export default function LoginPage() {
           break;
         case 'auth/user-not-found':
         case 'auth/wrong-password':
+        case 'auth/invalid-credential':
           errorMessage = 'Invalid email or password.';
           break;
         case 'auth/email-already-in-use':
