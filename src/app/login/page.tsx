@@ -9,9 +9,10 @@ import {
     AuthError,
     EmailAuthProvider,
     linkWithCredential,
-    signInWithCredential,
+    getAdditionalUserInfo,
     GoogleAuthProvider,
-    getAdditionalUserInfo
+    reauthenticateWithCredential,
+    UserCredential
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
@@ -102,14 +103,18 @@ export default function LoginPage() {
     setIsLoading(true);
     setIsLinkDialogOpen(false);
     try {
-        const userEmail = email || getAdditionalUserInfo(pendingGoogleCredential)?.profile?.email;
-        if (!userEmail) {
-            throw new Error("Could not determine user's email.");
+        if (!auth.currentUser) {
+            throw new Error("No user is currently signed in to link the account.");
         }
-        // Re-authenticate the user with their original credentials
-        const { user } = await signInWithEmailAndPassword(auth, userEmail, password);
-        // Link the pending Google credential to the existing account
-        await linkWithCredential(user, pendingGoogleCredential);
+        
+        // Create a credential for the user's existing email/password
+        const credential = EmailAuthProvider.credential(auth.currentUser.email!, password);
+        
+        // Re-authenticate the current user with their original credential
+        await reauthenticateWithCredential(auth.currentUser, credential);
+        
+        // Link the pending Google credential to the now re-authenticated user
+        await linkWithCredential(auth.currentUser, pendingGoogleCredential);
 
         toast({
             title: "Account Linked",
@@ -117,9 +122,15 @@ export default function LoginPage() {
         });
         // Redirection is handled by the useAuth hook
     } catch (error) {
+        let description = "The password you entered was incorrect. Please try again.";
+        const authError = error as AuthError;
+        if (authError.code !== 'auth/wrong-password' && authError.code !== 'auth/invalid-credential') {
+            description = "An unexpected error occurred during linking. Please try again.";
+            console.error("Linking error:", authError);
+        }
         toast({
             title: "Linking Failed",
-            description: "The password you entered was incorrect. Please try again.",
+            description: description,
             variant: "destructive",
         });
     } finally {
@@ -146,10 +157,28 @@ export default function LoginPage() {
             const pendingCred = GoogleAuthProvider.credentialFromError(authError);
             if (pendingCred) {
                 const userEmail = authError.customData?.email as string;
-                setEmail(userEmail); // Pre-fill email for password prompt
-                setPendingGoogleCredential(pendingCred);
-                setIsLinkDialogOpen(true);
+                if (!userEmail) {
+                  toast({ title: "Linking Error", description: "Could not retrieve email from Google. Please try again.", variant: "destructive"});
+                  setIsLoading(false);
+                  return;
+                }
+                
+                // Temporarily sign in with the email to get the user object for re-authentication
+                try {
+                  await signInWithEmailAndPassword(auth, userEmail, 'invalid-password-to-force-user-object');
+                } catch (signInError) {
+                    const signInAuthError = signInError as AuthError;
+                    // We expect this to fail, but it gives us the user context if the email exists.
+                    if (signInAuthError.code === 'auth/invalid-credential' && auth.currentUser) {
+                       setEmail(userEmail); // Pre-fill email for password prompt
+                       setPendingGoogleCredential(pendingCred);
+                       setIsLinkDialogOpen(true);
+                    } else {
+                       toast({ title: "Account Error", description: "Could not prepare account for linking. Please try signing in with your password first.", variant: "destructive"});
+                    }
+                }
             }
+            setIsLoading(false);
             return; // Stop further execution here, wait for dialog
         }
         
@@ -164,7 +193,9 @@ export default function LoginPage() {
             variant: "destructive",
         });
     } finally {
-        setIsLoading(false);
+        if (isLinkDialogOpen === false) { // Don't turn off loading if dialog is opening
+            setIsLoading(false);
+        }
     }
   };
 
@@ -275,3 +306,5 @@ export default function LoginPage() {
     </>
   );
 }
+
+    
