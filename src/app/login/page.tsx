@@ -46,10 +46,12 @@ export default function LoginPage() {
 
     try {
         if (user?.isAnonymous) {
+            // If the current user is a guest, link their account.
             const credential = EmailAuthProvider.credential(email, password);
             await linkWithCredential(user, credential);
             toast({ title: "Account created successfully!", description: "Your guest data has been saved." });
         } else {
+            // If another user is logged in, sign them out first.
             if (user && !isSwitchingToLogin) {
                 await signOut();
             }
@@ -95,9 +97,11 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
+        // If a user is already logged in (guest or another user), sign them out first.
         if (user) {
             await signOut();
         }
+        // Proceed with Google sign-in.
         await signInWithGoogle();
         toast({ title: "Successfully signed in with Google!" });
     } catch (error) {
@@ -242,5 +246,3 @@ export default function LoginPage() {
     </>
   );
 }
-
-    
