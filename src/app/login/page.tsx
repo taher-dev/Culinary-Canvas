@@ -8,9 +8,7 @@ import {
     signInWithEmailAndPassword, 
     AuthError,
     EmailAuthProvider,
-    linkWithCredential,
-    GoogleAuthProvider,
-    UserCredential
+    linkWithCredential
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
@@ -21,8 +19,6 @@ import { useToast } from '@/hooks/use-toast';
 import { ChefHat, Loader2, User } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Separator } from '@/components/ui/separator';
-import { PasswordConfirmationDialog } from '@/components/PasswordConfirmationDialog';
-import type { AuthProvider as FirebaseAuthProvider, OAuthCredential } from 'firebase/auth';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
@@ -42,8 +38,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user, signInWithGoogle, signInAnonymously } = useAuth();
-  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
-  const [pendingGoogleCredential, setPendingGoogleCredential] = useState<OAuthCredential | null>(null);
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,43 +92,6 @@ export default function LoginPage() {
     }
   };
 
-  const handlePasswordConfirm = async (password: string) => {
-    setIsLoading(true);
-    setIsLinkDialogOpen(false);
-    try {
-        if (!email || !pendingGoogleCredential) {
-            throw new Error("Missing information for account linking.");
-        }
-        
-        // 1. Sign in the user with their existing email and password
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        
-        // 2. Link the pending Google credential to the now signed-in user
-        await linkWithCredential(userCredential.user, pendingGoogleCredential);
-
-        toast({
-            title: "Account Linked",
-            description: "You can now sign in with Google or your password.",
-        });
-        // Redirection is handled by the useAuth hook
-    } catch (error) {
-        let description = "The password you entered was incorrect. Please try again.";
-        const authError = error as AuthError;
-        if (authError.code !== 'auth/wrong-password' && authError.code !== 'auth/invalid-credential') {
-            description = "An unexpected error occurred during linking. Please try again.";
-            console.error("Linking error:", authError);
-        }
-        toast({
-            title: "Linking Failed",
-            description: description,
-            variant: "destructive",
-        });
-    } finally {
-        setPendingGoogleCredential(null);
-        setIsLoading(false);
-    }
-  };
-
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
@@ -148,42 +105,31 @@ export default function LoginPage() {
         const authError = error as AuthError;
         let description = "Could not sign in with Google. Please try again.";
         
-        if (authError.code === 'auth/account-exists-with-different-credential') {
-            const pendingCred = GoogleAuthProvider.credentialFromError(authError);
-            if (pendingCred) {
-                const userEmail = authError.customData?.email as string;
-                if (!userEmail) {
-                  toast({ title: "Linking Error", description: "Could not retrieve email from Google. Please try again.", variant: "destructive"});
-                  setIsLoading(false);
-                  return;
-                }
-                
-                // Prompt user for password to link accounts
-                setEmail(userEmail); // Pre-fill email for password prompt
-                setPendingGoogleCredential(pendingCred);
-                setIsLinkDialogOpen(true);
-            }
-            setIsLoading(false);
-            return; // Stop further execution here, wait for dialog
-        }
-        
         if (authError.code === 'auth/popup-closed-by-user') {
             description = "The sign-in popup was closed before completing. Please try again.";
-        } else if (authError.code === 'auth/credential-already-in-use') {
+        } else if (authError.code === 'auth/credential-already-in-use' || authError.code === 'auth/email-already-in-use') {
             description = "This Google account is already linked to another user. Please sign in with your original method.";
+        } else if (authError.code === 'auth/account-exists-with-different-credential') {
+            description = "An account with this email already exists. Firebase will automatically link them on successful sign-in.";
+             toast({
+                title: "Linking Account",
+                description,
+            });
+            // Let the signInWithGoogle in useAuth handle the rest
         } else {
              console.error("Google Sign-In Error:", authError);
         }
         
-        toast({
-            title: "Google Sign-In Failed",
-            description,
-            variant: "destructive",
-        });
-    } finally {
-        if (isLinkDialogOpen === false) { // Don't turn off loading if dialog is opening
-            setIsLoading(false);
+        // Only show error toast if it's not the auto-linking case
+        if(authError.code !== 'auth/account-exists-with-different-credential') {
+             toast({
+                title: "Google Sign-In Failed",
+                description,
+                variant: "destructive",
+            });
         }
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -207,15 +153,6 @@ export default function LoginPage() {
 
   return (
     <>
-        <PasswordConfirmationDialog
-            isOpen={isLinkDialogOpen}
-            onClose={() => {
-                setIsLinkDialogOpen(false);
-                setPendingGoogleCredential(null);
-            }}
-            onConfirm={handlePasswordConfirm}
-            email={email}
-        />
         <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
         <Card className="w-full max-w-sm">
             <CardHeader className="text-center">
