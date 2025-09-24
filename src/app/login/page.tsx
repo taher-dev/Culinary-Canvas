@@ -46,66 +46,72 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      if (user?.isAnonymous) {
-        // Guest user wants to create a permanent account.
-        // We'll create a new credential and link it to the anonymous account.
-        const credential = EmailAuthProvider.credential(email, password);
-        await linkWithCredential(user, credential);
-        toast({ title: "Account created successfully!", description: "Your guest data has been saved." });
-        router.push('/'); // Redirect to home after successful linking
-      } else {
-        // Standard login/signup for a new or existing user.
-        if (isSigningUp) {
-          await createUserWithEmailAndPassword(auth, email, password);
-          toast({ title: "Account created successfully!", description: "You've been logged in." });
+        if (user?.isAnonymous) {
+            const credential = EmailAuthProvider.credential(email, password);
+            await linkWithCredential(user, credential);
+            toast({ title: "Account created successfully!", description: "Your guest data has been saved." });
+            router.push('/');
         } else {
-          await signInWithEmailAndPassword(auth, email, password);
-          toast({ title: "Login successful!", description: "Welcome back." });
+            if (isSigningUp) {
+                await createUserWithEmailAndPassword(auth, email, password);
+                toast({ title: "Account created successfully!", description: "You've been logged in." });
+            } else {
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    toast({ title: "Login successful!", description: "Welcome back." });
+                } catch (error) {
+                    const authError = error as AuthError;
+                    if (authError.code === 'auth/account-exists-with-different-credential') {
+                        // This case can happen if the user signed up with email/password
+                        // and later linked a Google account. The primary method might
+                        // now be Google. We can try signing them in with Google.
+                        await signInWithGoogle();
+                    } else {
+                        throw error; // Re-throw other errors to be caught by the outer catch
+                    }
+                }
+            }
         }
-        // Redirection for new signup/login is handled by the useAuth hook's onAuthStateChanged
-      }
     } catch (error) {
-      const authError = error as AuthError;
-      let errorMessage = 'An unexpected error occurred. Please try again.';
-      switch (authError.code) {
-        case 'auth/invalid-email':
-          errorMessage = 'Please enter a valid email address.';
-          break;
-        case 'auth/wrong-password':
-        case 'auth/invalid-credential':
-          errorMessage = 'Invalid email or password.';
-          break;
-        case 'auth/email-already-in-use':
-        case 'auth/credential-already-in-use':
-          errorMessage = 'This email is already in use. Please log in or use a different email.';
-          break;
-        case 'auth/weak-password':
-            errorMessage = 'Password should be at least 6 characters.';
-            break;
-        default:
-            console.error(authError.code, authError.message);
-      }
-      toast({
-        title: `Authentication Failed`,
-        description: errorMessage,
-        variant: 'destructive',
-      });
+        const authError = error as AuthError;
+        let errorMessage = 'An unexpected error occurred. Please try again.';
+        switch (authError.code) {
+            case 'auth/invalid-email':
+                errorMessage = 'Please enter a valid email address.';
+                break;
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential':
+                errorMessage = 'Invalid email or password.';
+                break;
+            case 'auth/email-already-in-use':
+            case 'auth/credential-already-in-use':
+                errorMessage = 'This email is already in use. Please log in or use a different email.';
+                break;
+            case 'auth/weak-password':
+                errorMessage = 'Password should be at least 6 characters.';
+                break;
+            default:
+                console.error(authError.code, authError.message);
+        }
+        toast({
+            title: `Authentication Failed`,
+            description: errorMessage,
+            variant: 'destructive',
+        });
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
+};
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
         if (user?.isAnonymous) {
-            // If user is a guest, link their anonymous account to Google.
             const provider = new GoogleAuthProvider();
             await linkWithPopup(user, provider);
             toast({ title: "Account linked with Google!", description: "Your guest data has been saved." });
             router.push('/');
         } else {
-            // Standard Google Sign-In
             await signInWithGoogle();
             toast({ title: "Successfully signed in with Google!" });
         }
@@ -114,7 +120,6 @@ export default function LoginPage() {
         let description = "Could not sign in with Google. Please try again.";
 
         if (authError.code === 'auth/account-exists-with-different-credential') {
-             // This is the key flow for linking an existing email/password account
              try {
                 const pendingCred = GoogleAuthProvider.credentialFromError(authError);
                 const email = authError.customData.email as string;
@@ -122,6 +127,7 @@ export default function LoginPage() {
                 const password = prompt("An account with this email already exists. Please enter your password to link your Google account.");
                 if (!password) {
                     toast({ title: "Link Canceled", description: "You canceled the account linking process.", variant: "destructive" });
+                    setIsLoading(false);
                     return;
                 }
 
