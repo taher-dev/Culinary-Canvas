@@ -52,16 +52,16 @@ export default function RecipeListItem({ recipe, onDelete }: RecipeListItemProps
                     />
                 </div>
             </Link>
-            <div className="p-4 flex-1">
-              <Link href={`/recipe/${recipe.id}`}>
-                <Badge variant="secondary" className="mb-1">{recipe.category}</Badge>
-                <h3 className="text-lg font-headline font-semibold leading-tight mb-1 group-hover:text-primary truncate">
-                {recipe.title}
+            <div className="p-4 flex-1 min-w-0">
+              <Link href={`/recipe/${recipe.id}`} className="flex flex-col h-full">
+                <Badge variant="secondary" className="mb-1 self-start">{recipe.category}</Badge>
+                <h3 className="text-lg font-headline font-semibold leading-tight mb-1 group-hover:text-primary line-clamp-2">
+                  {recipe.title}
                 </h3>
-                <p className="text-sm text-muted-foreground mb-3 h-10 line-clamp-2">
-                {recipe.description}
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-2 flex-grow">
+                  {recipe.description}
                 </p>
-                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-muted-foreground mt-auto">
                     <div className="flex items-center gap-1.5">
                         <Clock className="h-4 w-4" />
                         <span>{recipe.time}</span>
