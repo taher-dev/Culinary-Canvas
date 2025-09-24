@@ -33,7 +33,7 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSigningUp, setIsSigningUp] = useState(false);
+  const [isSigningUp, setIsSigningUp] = useState(true); // Default to sign up for non-guests
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -45,11 +45,13 @@ export default function LoginPage() {
 
     try {
       if (user?.isAnonymous) {
+        // Guest users can only link to a new account (sign up)
         const credential = EmailAuthProvider.credential(email, password);
         await linkWithCredential(user, credential);
         toast({ title: "Account linked successfully!", description: "Your guest data has been saved." });
         router.push('/');
       } else {
+        // Standard user (not a guest)
         if (isSigningUp) {
           await createUserWithEmailAndPassword(auth, email, password);
           toast({ title: "Account created successfully!", description: "You've been logged in." });
@@ -66,7 +68,6 @@ export default function LoginPage() {
         case 'auth/invalid-email':
           errorMessage = 'Please enter a valid email address.';
           break;
-        case 'auth/user-not-found':
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
           errorMessage = 'Invalid email or password.';
@@ -133,6 +134,8 @@ export default function LoginPage() {
         setIsLoading(false);
     }
   };
+  
+  const isGuestMode = !!user?.isAnonymous;
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
@@ -142,10 +145,10 @@ export default function LoginPage() {
                 <ChefHat className="h-10 w-10 text-primary" />
             </div>
           <CardTitle className="text-2xl font-bold font-headline">
-            {user?.isAnonymous ? 'Save Your Progress' : (isSigningUp ? 'Create an Account' : 'Welcome Back')}
+            {isGuestMode ? 'Save Your Progress' : (isSigningUp ? 'Create an Account' : 'Welcome Back')}
           </CardTitle>
           <CardDescription>
-            {user?.isAnonymous ? 'Create an account to save your recipes permanently.' : (isSigningUp ? 'Enter your details to get started.' : 'Log in to access your culinary canvas.')}
+            {isGuestMode ? 'Create an account to save your recipes permanently.' : (isSigningUp ? 'Enter your details to get started.' : 'Log in to access your culinary canvas.')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -175,7 +178,7 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <Loader2 className="animate-spin" /> : (isSigningUp ? 'Sign Up' : (user?.isAnonymous ? 'Link Account' : 'Log In'))}
+              {isLoading ? <Loader2 className="animate-spin" /> : (isGuestMode ? 'Save & Create Account' : (isSigningUp ? 'Sign Up' : 'Log In'))}
             </Button>
           </form>
 
@@ -188,9 +191,9 @@ export default function LoginPage() {
           <div className="space-y-2">
             <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
               {isLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon className="mr-2 h-5 w-5" />
-              {user?.isAnonymous ? 'Link with Google' : 'Sign in with Google'}</>}
+              {isGuestMode ? 'Link with Google' : 'Sign in with Google'}</>}
             </Button>
-            {!user?.isAnonymous && (
+            {!isGuestMode && (
               <Button variant="outline" className="w-full" onClick={handleAnonymousSignIn} disabled={isLoading}>
                  {isLoading ? <Loader2 className="animate-spin" /> : <><User className="mr-2 h-5 w-5" />
                 Continue as Guest</>}
@@ -198,7 +201,7 @@ export default function LoginPage() {
             )}
           </div>
           
-          {(!user || user.isAnonymous) && (
+          {!isGuestMode && (
              <div className="mt-4 text-center text-sm">
                 {isSigningUp ? 'Already have an account?' : "Don't have an account?"}
                 <Button
