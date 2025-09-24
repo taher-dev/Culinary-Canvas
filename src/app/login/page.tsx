@@ -38,7 +38,7 @@ export default function LoginPage() {
   const [isSwitchingToLogin, setIsSwitchingToLogin] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { user, signInWithGoogle, signInAnonymously } = useAuth();
+  const { user, signInWithGoogle, signInAnonymously, signOut } = useAuth();
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +50,9 @@ export default function LoginPage() {
             await linkWithCredential(user, credential);
             toast({ title: "Account created successfully!", description: "Your guest data has been saved." });
         } else {
+            if (user && !isSwitchingToLogin) {
+                await signOut();
+            }
             if (isSigningUp) {
                 await createUserWithEmailAndPassword(auth, email, password);
                 toast({ title: "Account created successfully!", description: "You've been logged in." });
@@ -92,6 +95,9 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
+        if (user) {
+            await signOut();
+        }
         await signInWithGoogle();
         toast({ title: "Successfully signed in with Google!" });
     } catch (error) {
@@ -236,3 +242,5 @@ export default function LoginPage() {
     </>
   );
 }
+
+    
