@@ -10,7 +10,7 @@ import {
     signInWithPopup, 
     signInAnonymously as firebaseSignInAnonymously,
     linkWithPopup,
-    AuthError,
+    type AuthError,
     signInWithEmailAndPassword,
     linkWithCredential,
     EmailAuthProvider,
@@ -47,12 +47,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    // This effect runs after the initial user state has been determined.
     if (!loading) {
-      if (user && !user.isAnonymous && pathname === '/login') {
+      if (user && pathname === '/login') {
         router.push('/');
       } else if (!user && pathname !== '/login') {
-        // Only sign in as guest if there's no user and not on the login page
         firebaseSignInAnonymously(auth).catch((error) => {
           console.error("Anonymous sign-in failed", error);
         });
@@ -63,7 +61,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       await firebaseSignOut(auth);
-      // Redirect to login page after sign out to clear state
       router.push('/login');
     } catch (error) {
       console.error('Error signing out:', error);
@@ -74,15 +71,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const provider = new GoogleAuthProvider();
     try {
         if (user?.isAnonymous) {
-            // If the user is a guest, link the Google account to the guest account.
-            // This preserves their data.
             await linkWithPopup(user, provider);
         } else {
-            // If there's no user or a regular user, perform a standard sign-in.
             await signInWithPopup(auth, provider);
         }
     } catch (error) {
-        // Re-throw the error to be handled by the calling component (LoginPage)
+        const authError = error as AuthError;
+        if (authError.code === 'auth/account-exists-with-different-credential') {
+             toast({
+                title: "Account exists",
+                description: "An account with this email already exists. Please sign in with your original method to link your Google account.",
+                variant: "destructive",
+            });
+        }
         throw error;
     }
   };

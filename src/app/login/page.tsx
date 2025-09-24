@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { 
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword, 
-    AuthError,
+    type AuthError,
     EmailAuthProvider,
     linkWithCredential,
     linkWithPopup,
@@ -40,7 +40,7 @@ export default function LoginPage() {
   const [isSwitchingToLogin, setIsSwitchingToLogin] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { user, signInWithGoogle, signInAnonymously, signOut } = useAuth();
+  const { user, signInWithGoogle, signInAnonymously } = useAuth();
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,23 +51,13 @@ export default function LoginPage() {
             const credential = EmailAuthProvider.credential(email, password);
             await linkWithCredential(user, credential);
             toast({ title: "Account created successfully!", description: "Your guest data has been saved." });
-            router.push('/');
         } else {
             if (isSigningUp) {
                 await createUserWithEmailAndPassword(auth, email, password);
                 toast({ title: "Account created successfully!", description: "You've been logged in." });
             } else {
-                try {
-                    await signInWithEmailAndPassword(auth, email, password);
-                    toast({ title: "Login successful!", description: "Welcome back." });
-                } catch (error) {
-                    const authError = error as AuthError;
-                    if (authError.code === 'auth/account-exists-with-different-credential') {
-                        await signInWithGoogle();
-                    } else {
-                        throw error;
-                    }
-                }
+                await signInWithEmailAndPassword(auth, email, password);
+                toast({ title: "Login successful!", description: "Welcome back." });
             }
         }
     } catch (error) {
@@ -104,69 +94,38 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-        if (user?.isAnonymous) {
-            const provider = new GoogleAuthProvider();
-            await linkWithPopup(user, provider);
-            toast({ title: "Account linked with Google!", description: "Your guest data has been saved." });
-            router.push('/');
-        } else {
-            await signInWithGoogle();
-            toast({ title: "Successfully signed in with Google!" });
-        }
+        await signInWithGoogle();
+        toast({ title: "Successfully signed in with Google!" });
     } catch (error) {
         const authError = error as AuthError;
         let description = "Could not sign in with Google. Please try again.";
-
-        if (authError.code === 'auth/account-exists-with-different-credential') {
-             try {
-                const pendingCred = GoogleAuthProvider.credentialFromError(authError);
-                const email = authError.customData.email as string;
-                
-                const password = prompt("An account with this email already exists. Please enter your password to link your Google account.");
-                if (!password) {
-                    toast({ title: "Link Canceled", description: "You canceled the account linking process.", variant: "destructive" });
-                    setIsLoading(false);
-                    return;
-                }
-
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                
-                if (pendingCred) {
-                    await linkWithCredential(userCredential.user, pendingCred);
-                    toast({ title: "Accounts Linked!", description: "You can now sign in with either email/password or Google." });
-                }
-             } catch (linkError) {
-                const linkAuthError = linkError as AuthError;
-                let linkDescription = "Could not link accounts. Please try again.";
-                if (linkAuthError.code === 'auth/wrong-password' || linkAuthError.code === 'auth/invalid-credential') {
-                    linkDescription = "The password you entered was incorrect. Please try again.";
-                }
-                console.error('Account linking error:', linkAuthError);
-                toast({ title: "Linking Failed", description: linkDescription, variant: "destructive" });
-             }
-
-        } else if (authError.code === 'auth/popup-closed-by-user') {
+        
+        if (authError.code === 'auth/popup-closed-by-user') {
             description = "The sign-in popup was closed before completing. Please try again.";
         } else if (authError.code === 'auth/credential-already-in-use') {
             description = "This Google account is already linked to another user.";
         } else {
              console.error("Google Sign-In Error:", authError);
-             toast({
-                title: "Google Sign-In Failed",
-                description,
-                variant: "destructive",
-            });
         }
+
+        toast({
+            title: "Google Sign-In Failed",
+            description,
+            variant: "destructive",
+        });
     } finally {
         setIsLoading(false);
     }
   };
 
   const handleAnonymousSignIn = async () => {
+    if (user?.isAnonymous) {
+        router.push('/');
+        return;
+    }
     setIsLoading(true);
     try {
         await signInAnonymously();
-        router.push('/');
     } catch (error) {
         toast({
             title: "Anonymous Sign-In Failed",
