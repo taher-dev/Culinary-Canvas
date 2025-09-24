@@ -110,24 +110,16 @@ export default function LoginPage() {
         } else if (authError.code === 'auth/credential-already-in-use' || authError.code === 'auth/email-already-in-use') {
             description = "This Google account is already linked to another user. Please sign in with your original method.";
         } else if (authError.code === 'auth/account-exists-with-different-credential') {
-            description = "An account with this email already exists. Firebase will automatically link them on successful sign-in.";
-             toast({
-                title: "Linking Account",
-                description,
-            });
-            // Let the signInWithGoogle in useAuth handle the rest
+            description = "An account with this email already exists. Please sign in with your original method to link your Google account.";
         } else {
              console.error("Google Sign-In Error:", authError);
         }
         
-        // Only show error toast if it's not the auto-linking case
-        if(authError.code !== 'auth/account-exists-with-different-credential') {
-             toast({
-                title: "Google Sign-In Failed",
-                description,
-                variant: "destructive",
-            });
-        }
+        toast({
+            title: "Google Sign-In Failed",
+            description,
+            variant: "destructive",
+        });
     } finally {
         setIsLoading(false);
     }

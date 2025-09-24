@@ -9,7 +9,9 @@ import {
     GoogleAuthProvider, 
     signInWithPopup, 
     signInAnonymously as firebaseSignInAnonymously,
-    linkWithPopup
+    linkWithPopup,
+    fetchSignInMethodsForEmail,
+    AuthError
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { usePathname, useRouter } from 'next/navigation';
@@ -61,14 +63,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const currentUser = auth.currentUser;
       if (currentUser && currentUser.isAnonymous) {
         // Link the anonymous account with the Google account
-        await linkWithPopup(currentUser, provider);
+        const result = await linkWithPopup(currentUser, provider);
+        setUser(result.user);
         toast({ title: "Account linked with Google!", description: "Your guest data has been saved." });
       } else {
         // Standard sign-in with Google
-        await signInWithPopup(auth, provider);
+        const result = await signInWithPopup(auth, provider);
+        setUser(result.user);
       }
       // Redirection is handled by onAuthStateChanged
     } catch (error) {
+      const authError = error as AuthError;
+      if (authError.code === 'auth/account-exists-with-different-credential' && authError.customData?.email) {
+          const email = authError.customData.email as string;
+          const methods = await fetchSignInMethodsForEmail(auth, email);
+          if (methods.includes('password')) {
+            toast({
+                title: "Account Exists",
+                description: "You already have an account with this email. Please sign in with your password to link your Google account.",
+                variant: "destructive"
+            })
+            // Let the login page handle redirection or further actions.
+          }
+      }
       console.error('Error signing in with Google:', error);
       throw error; // Re-throw to be caught in the component
     }
