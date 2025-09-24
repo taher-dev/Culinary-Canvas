@@ -46,13 +46,15 @@ export default function LoginPage() {
     try {
       const currentUser = auth.currentUser;
       if (currentUser && currentUser.isAnonymous) {
-        // Link anonymous account to a permanent one
+        // User is a guest. The form can either link to a new account (isSigningUp)
+        // or sign in to an existing account which implicitly links.
+        // For guest mode, Firebase requires creating a credential and linking.
         const credential = EmailAuthProvider.credential(email, password);
         await linkWithCredential(currentUser, credential);
         toast({ title: "Account linked successfully!", description: "Your guest data has been saved." });
         router.push('/');
       } else {
-        // Standard sign-in or sign-up
+        // Standard sign-in or sign-up for non-guest users.
         if (isSigningUp) {
           await createUserWithEmailAndPassword(auth, email, password);
           toast({ title: "Account created successfully!", description: "You've been logged in." });
@@ -60,8 +62,8 @@ export default function LoginPage() {
           await signInWithEmailAndPassword(auth, email, password);
           toast({ title: "Login successful!", description: "Welcome back." });
         }
+        // Redirection for new signup/login is handled by the useAuth hook
       }
-      // Redirection for new signup/login is handled by the useAuth hook
     } catch (error) {
       const authError = error as AuthError;
       let errorMessage = 'An unexpected error occurred. Please try again.';
