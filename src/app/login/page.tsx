@@ -39,7 +39,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { user, signInWithGoogle, signInAnonymously } = useAuth();
+  const { user, signInWithGoogle, signInAnonymously, signOut } = useAuth();
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,12 +62,9 @@ export default function LoginPage() {
                 } catch (error) {
                     const authError = error as AuthError;
                     if (authError.code === 'auth/account-exists-with-different-credential') {
-                        // This case can happen if the user signed up with email/password
-                        // and later linked a Google account. The primary method might
-                        // now be Google. We can try signing them in with Google.
                         await signInWithGoogle();
                     } else {
-                        throw error; // Re-throw other errors to be caught by the outer catch
+                        throw error;
                     }
                 }
             }
@@ -179,6 +176,12 @@ export default function LoginPage() {
         setIsLoading(false);
     }
   };
+
+  const handleLoginExisting = async () => {
+    setIsLoading(true);
+    await signOut();
+    setIsLoading(false);
+  };
   
   const isGuestMode = !!user?.isAnonymous;
 
@@ -247,7 +250,18 @@ export default function LoginPage() {
                 )}
             </div>
             
-            {!isGuestMode && (
+            {isGuestMode ? (
+                <div className="mt-4 text-center text-sm">
+                    <Button
+                        variant="link"
+                        className="pl-1"
+                        onClick={handleLoginExisting}
+                        disabled={isLoading}
+                        >
+                        {isLoading ? <Loader2 className="animate-spin" /> : 'Log in to an existing account'}
+                    </Button>
+                </div>
+            ) : (
                 <div className="mt-4 text-center text-sm">
                     {isSigningUp ? 'Already have an account?' : "Don't have an account?"}
                     <Button
