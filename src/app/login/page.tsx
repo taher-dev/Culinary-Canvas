@@ -9,9 +9,7 @@ import {
     AuthError,
     EmailAuthProvider,
     linkWithCredential,
-    getAdditionalUserInfo,
     GoogleAuthProvider,
-    reauthenticateWithCredential,
     UserCredential
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -24,6 +22,7 @@ import { ChefHat, Loader2, User } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Separator } from '@/components/ui/separator';
 import { PasswordConfirmationDialog } from '@/components/PasswordConfirmationDialog';
+import type { AuthProvider as FirebaseAuthProvider, OAuthCredential } from 'firebase/auth';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
@@ -44,7 +43,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { user, signInWithGoogle, signInAnonymously } = useAuth();
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
-  const [pendingGoogleCredential, setPendingGoogleCredential] = useState<any>(null);
+  const [pendingGoogleCredential, setPendingGoogleCredential] = useState<OAuthCredential | null>(null);
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,18 +102,15 @@ export default function LoginPage() {
     setIsLoading(true);
     setIsLinkDialogOpen(false);
     try {
-        if (!auth.currentUser) {
-            throw new Error("No user is currently signed in to link the account.");
+        if (!email || !pendingGoogleCredential) {
+            throw new Error("Missing information for account linking.");
         }
         
-        // Create a credential for the user's existing email/password
-        const credential = EmailAuthProvider.credential(auth.currentUser.email!, password);
+        // 1. Sign in the user with their existing email and password
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
         
-        // Re-authenticate the current user with their original credential
-        await reauthenticateWithCredential(auth.currentUser, credential);
-        
-        // Link the pending Google credential to the now re-authenticated user
-        await linkWithCredential(auth.currentUser, pendingGoogleCredential);
+        // 2. Link the pending Google credential to the now signed-in user
+        await linkWithCredential(userCredential.user, pendingGoogleCredential);
 
         toast({
             title: "Account Linked",
@@ -139,7 +135,6 @@ export default function LoginPage() {
     }
   };
 
-
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
@@ -163,20 +158,10 @@ export default function LoginPage() {
                   return;
                 }
                 
-                // Temporarily sign in with the email to get the user object for re-authentication
-                try {
-                  await signInWithEmailAndPassword(auth, userEmail, 'invalid-password-to-force-user-object');
-                } catch (signInError) {
-                    const signInAuthError = signInError as AuthError;
-                    // We expect this to fail, but it gives us the user context if the email exists.
-                    if (signInAuthError.code === 'auth/invalid-credential' && auth.currentUser) {
-                       setEmail(userEmail); // Pre-fill email for password prompt
-                       setPendingGoogleCredential(pendingCred);
-                       setIsLinkDialogOpen(true);
-                    } else {
-                       toast({ title: "Account Error", description: "Could not prepare account for linking. Please try signing in with your password first.", variant: "destructive"});
-                    }
-                }
+                // Prompt user for password to link accounts
+                setEmail(userEmail); // Pre-fill email for password prompt
+                setPendingGoogleCredential(pendingCred);
+                setIsLinkDialogOpen(true);
             }
             setIsLoading(false);
             return; // Stop further execution here, wait for dialog
@@ -186,7 +171,10 @@ export default function LoginPage() {
             description = "The sign-in popup was closed before completing. Please try again.";
         } else if (authError.code === 'auth/credential-already-in-use') {
             description = "This Google account is already linked to another user. Please sign in with your original method.";
+        } else {
+             console.error("Google Sign-In Error:", authError);
         }
+        
         toast({
             title: "Google Sign-In Failed",
             description,
@@ -221,7 +209,10 @@ export default function LoginPage() {
     <>
         <PasswordConfirmationDialog
             isOpen={isLinkDialogOpen}
-            onClose={() => setIsLinkDialogOpen(false)}
+            onClose={() => {
+                setIsLinkDialogOpen(false);
+                setPendingGoogleCredential(null);
+            }}
             onConfirm={handlePasswordConfirm}
             email={email}
         />
@@ -306,5 +297,3 @@ export default function LoginPage() {
     </>
   );
 }
-
-    
