@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import placeholderData from '@/app/lib/placeholder-images.json';
 
 export default function RecipeDetailPage() {
   const params = useParams();
@@ -50,6 +51,8 @@ export default function RecipeDetailPage() {
       router.push('/');
     }
   };
+
+  const { "data-ai-hint": aiHint, url: placeholderUrl } = placeholderData.recipePlaceholder;
 
   if (isLoading || recipe === undefined) {
     return (
@@ -95,11 +98,12 @@ export default function RecipeDetailPage() {
       <article>
         <div className="relative mb-6 aspect-[16/9] w-full overflow-hidden rounded-lg shadow-lg">
           <Image
-            src={recipe.image || "https://picsum.photos/seed/2/1280/720"}
+            src={recipe.image || placeholderUrl}
             alt={recipe.title}
             fill
             className="object-cover"
             priority
+            data-ai-hint={aiHint}
           />
         </div>
 

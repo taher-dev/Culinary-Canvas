@@ -23,7 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useState } from 'react';
+import placeholderData from '@/app/lib/placeholder-images.json';
 
 interface RecipeListItemProps {
   recipe: Recipe;
@@ -35,6 +35,8 @@ export default function RecipeListItem({ recipe, onDelete }: RecipeListItemProps
     await onDelete(recipe.id);
   };
 
+  const { "data-ai-hint": aiHint, url: placeholderUrl } = placeholderData.recipePlaceholder;
+
   return (
     <div className="group relative">
        <Card className="transition-all duration-300 ease-in-out group-hover:shadow-lg group-hover:border-primary overflow-hidden">
@@ -42,10 +44,11 @@ export default function RecipeListItem({ recipe, onDelete }: RecipeListItemProps
             <Link href={`/recipe/${recipe.id}`} className="flex-shrink-0">
                 <div className="relative w-32 h-full">
                     <Image
-                    src={recipe.image || "https://picsum.photos/seed/1/128/180"}
+                    src={recipe.image || placeholderUrl}
                     alt={recipe.title}
                     fill
                     className="object-cover"
+                    data-ai-hint={aiHint}
                     />
                 </div>
             </Link>

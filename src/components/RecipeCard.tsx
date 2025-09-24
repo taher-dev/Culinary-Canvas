@@ -23,7 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useState } from 'react';
+import placeholderData from '@/app/lib/placeholder-images.json';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -34,6 +34,8 @@ export default function RecipeCard({ recipe, onDelete }: RecipeCardProps) {
   const confirmDelete = async () => {
     await onDelete(recipe.id);
   };
+
+  const { "data-ai-hint": aiHint, url: placeholderUrl } = placeholderData.recipePlaceholder;
 
   return (
     <Card 
@@ -85,10 +87,11 @@ export default function RecipeCard({ recipe, onDelete }: RecipeCardProps) {
         <CardHeader className="p-0">
           <div className="aspect-[4/3] relative w-full overflow-hidden">
             <Image
-              src={recipe.image || "https://picsum.photos/seed/1/400/300"}
+              src={recipe.image || placeholderUrl}
               alt={recipe.title}
               fill
               className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+              data-ai-hint={aiHint}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent h-1/2 pointer-events-none" />
           </div>
