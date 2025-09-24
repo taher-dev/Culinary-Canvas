@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Users, Utensils, Trash2 } from 'lucide-react';
+import { Clock, Users, Utensils, Trash2, MoreVertical, Pencil } from 'lucide-react';
 import type { Recipe } from '@/lib/types';
 import { Button } from './ui/button';
 import {
@@ -17,6 +17,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useState } from 'react';
 
 interface RecipeCardProps {
@@ -25,8 +31,6 @@ interface RecipeCardProps {
 }
 
 export default function RecipeCard({ recipe, onDelete }: RecipeCardProps) {
-  const [isHovering, setIsHovering] = useState(false);
-
   const confirmDelete = async () => {
     await onDelete(recipe.id);
   };
@@ -34,36 +38,48 @@ export default function RecipeCard({ recipe, onDelete }: RecipeCardProps) {
   return (
     <Card 
       className="h-full overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl group relative"
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
     >
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button
-            variant="destructive"
-            size="icon"
-            className={`absolute top-2 right-2 z-10 h-8 w-8 transition-opacity ${isHovering ? 'opacity-100' : 'opacity-0'}`}
-            aria-label="Delete recipe"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the recipe
-              for "{recipe.title}".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
-              Yes, delete it
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <div className="absolute top-2 right-2 z-10">
+        <AlertDialog>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-background/50 hover:bg-background">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link href={`/recipe/${recipe.id}/edit`} className="cursor-pointer">
+                  <Pencil className="mr-2 h-4 w-4" />
+                  <span>Edit</span>
+                </Link>
+              </DropdownMenuItem>
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the recipe
+                for "{recipe.title}".
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                Yes, delete it
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
 
       <Link href={`/recipe/${recipe.id}`} className="block">
         <CardHeader className="p-0">
