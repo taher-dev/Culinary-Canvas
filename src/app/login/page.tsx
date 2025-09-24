@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ChefHat, User } from 'lucide-react';
+import { ChefHat, Loader2, User } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Separator } from '@/components/ui/separator';
 
@@ -124,7 +124,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
         await signInAnonymously();
-        // Redirection handled by useAuth hook
+        router.push('/');
     } catch (error) {
         toast({
             title: "Anonymous Sign-In Failed",
@@ -177,7 +177,7 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Processing...' : (isSigningUp ? 'Sign Up' : (user?.isAnonymous ? 'Link Account' : 'Log In'))}
+              {isLoading ? <Loader2 className="animate-spin" /> : (isSigningUp ? 'Sign Up' : (user?.isAnonymous ? 'Link Account' : 'Log In'))}
             </Button>
           </form>
 
@@ -189,13 +189,13 @@ export default function LoginPage() {
 
           <div className="space-y-2">
             <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
-              <GoogleIcon className="mr-2 h-5 w-5" />
-              {user?.isAnonymous ? 'Link with Google' : 'Sign in with Google'}
+              {isLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon className="mr-2 h-5 w-5" />
+              {user?.isAnonymous ? 'Link with Google' : 'Sign in with Google'}</>}
             </Button>
             {!user?.isAnonymous && (
               <Button variant="outline" className="w-full" onClick={handleAnonymousSignIn} disabled={isLoading}>
-                <User className="mr-2 h-5 w-5" />
-                Continue as Guest
+                 {isLoading ? <Loader2 className="animate-spin" /> : <><User className="mr-2 h-5 w-5" />
+                Continue as Guest</>}
               </Button>
             )}
           </div>
