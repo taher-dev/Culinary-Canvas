@@ -44,14 +44,15 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      if (user?.isAnonymous) {
-        // Guest users can only link to a new account (sign up)
+      const currentUser = auth.currentUser;
+      if (currentUser && currentUser.isAnonymous) {
+        // If user is a guest, link their anonymous account to a new email/password account.
         const credential = EmailAuthProvider.credential(email, password);
-        await linkWithCredential(user, credential);
+        await linkWithCredential(currentUser, credential);
         toast({ title: "Account linked successfully!", description: "Your guest data has been saved." });
         router.push('/');
       } else {
-        // Standard user (not a guest)
+        // This is the standard login/signup flow for non-guest users.
         if (isSigningUp) {
           await createUserWithEmailAndPassword(auth, email, password);
           toast({ title: "Account created successfully!", description: "You've been logged in." });
@@ -96,30 +97,28 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
         await signInWithGoogle();
-        // After linking, the user object updates. If they were anonymous, we redirect.
-        if (user?.isAnonymous) {
-            router.push('/');
-        }
-        // Otherwise redirection is handled by useAuth hook
+        // Redirection is handled by useAuth hook or within signInWithGoogle for linking
     } catch (error) {
         const authError = error as AuthError;
         let description = "Could not sign in with Google. Please try again.";
         
         if (authError.code === 'auth/popup-closed-by-user') {
             description = "The sign-in popup was closed before completing. Please try again.";
-        } else if (authError.code === 'auth/account-exists-with-different-credential') {
-            description = "This email is already linked to another user. Please sign in with your original method to link your Google account.";
         } else if (authError.code === 'auth/credential-already-in-use') {
             description = "This Google account is already linked to another user.";
-        } else {
+        } else if (authError.code !== 'auth/account-exists-with-different-credential') {
+             // We don't show a toast for 'account-exists-with-different-credential' because
+             // the useAuth hook handles the password prompt and subsequent toasts.
              console.error("Google Sign-In Error:", authError);
         }
         
-        toast({
-            title: "Google Sign-In Failed",
-            description,
-            variant: "destructive",
-        });
+        if (authError.code !== 'auth/account-exists-with-different-credential') {
+            toast({
+                title: "Google Sign-In Failed",
+                description,
+                variant: "destructive",
+            });
+        }
     } finally {
         setIsLoading(false);
     }

@@ -10,7 +10,6 @@ import {
     signInWithPopup, 
     signInAnonymously as firebaseSignInAnonymously,
     linkWithPopup,
-    fetchSignInMethodsForEmail,
     AuthError,
     signInWithEmailAndPassword,
     linkWithCredential
@@ -68,7 +67,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const result = await linkWithPopup(currentUser, provider);
         setUser(result.user);
         toast({ title: "Account linked with Google!", description: "Your guest data has been saved." });
-        return; // Exit after successful link
+        router.push('/');
+        return; 
       }
 
       // Standard sign-in with Google
