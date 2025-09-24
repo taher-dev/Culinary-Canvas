@@ -8,9 +8,7 @@ import {
     signInWithEmailAndPassword, 
     type AuthError,
     EmailAuthProvider,
-    linkWithCredential,
-    linkWithPopup,
-    GoogleAuthProvider
+    linkWithCredential
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
@@ -104,15 +102,15 @@ export default function LoginPage() {
             description = "The sign-in popup was closed before completing. Please try again.";
         } else if (authError.code === 'auth/credential-already-in-use') {
             description = "This Google account is already linked to another user.";
-        } else {
+        } else if (authError.code !== 'auth/account-exists-with-different-credential') {
+            // Don't show a toast for the credential conflict, as it's handled in useAuth
              console.error("Google Sign-In Error:", authError);
+             toast({
+                title: "Google Sign-In Failed",
+                description,
+                variant: "destructive",
+            });
         }
-
-        toast({
-            title: "Google Sign-In Failed",
-            description,
-            variant: "destructive",
-        });
     } finally {
         setIsLoading(false);
     }

@@ -10,12 +10,7 @@ import {
     signInWithPopup, 
     signInAnonymously as firebaseSignInAnonymously,
     linkWithPopup,
-    type AuthError,
-    signInWithEmailAndPassword,
-    linkWithCredential,
-    EmailAuthProvider,
-    getRedirectResult,
-    signInWithRedirect
+    type AuthError
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { usePathname, useRouter } from 'next/navigation';
@@ -50,11 +45,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!loading) {
       if (user && !user.isAnonymous && pathname === '/login') {
         router.push('/');
-      } else if (!user && pathname !== '/login') {
-        // Only sign in anonymously if not on the login page
-        firebaseSignInAnonymously(auth).catch((error) => {
-          console.error("Anonymous sign-in failed", error);
-        });
       }
     }
   }, [user, loading, pathname, router]);
@@ -63,7 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       await firebaseSignOut(auth);
-      router.push('/login');
+      // Let the onAuthStateChanged listener handle redirection to login if needed.
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -86,6 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 variant: "destructive",
             });
         }
+        // Re-throw the error to be caught in the component
         throw error;
     }
   };
