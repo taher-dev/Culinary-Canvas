@@ -251,13 +251,14 @@ export default function LoginPage() {
             
             {isGuestMode ? (
                 <div className="mt-4 text-center text-sm">
+                    Already have an account?
                     <Button
                         variant="link"
                         className="pl-1"
                         onClick={handleLoginExisting}
                         disabled={isLoading}
-                        >
-                        {isLoading ? <Loader2 className="animate-spin" /> : 'Log in to an existing account'}
+                    >
+                        {isLoading ? <Loader2 className="animate-spin" /> : 'Log In'}
                     </Button>
                 </div>
             ) : (
