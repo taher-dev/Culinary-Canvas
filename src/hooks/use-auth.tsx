@@ -37,11 +37,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-      // If a non-anonymous user is logged in and on the login page, redirect them to home
-      if (user && !user.isAnonymous && pathname === '/login') {
-        router.push('/');
+      if (user) {
+        setUser(user);
+        setLoading(false);
+        // If a non-anonymous user is logged in and on the login page, redirect them to home
+        if (!user.isAnonymous && pathname === '/login') {
+          router.push('/');
+        }
+      } else {
+        // If there's no user and we are not on the login page, sign in as guest
+        if (pathname !== '/login') {
+            firebaseSignInAnonymously(auth).catch((error) => {
+                console.error("Anonymous sign-in failed", error);
+                setLoading(false);
+            });
+        } else {
+            // If on login page, just update loading state
+            setUser(null);
+            setLoading(false);
+        }
       }
     });
 
