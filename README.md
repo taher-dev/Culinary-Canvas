@@ -8,13 +8,16 @@ A modern, personal cookbook to save, organize, and follow along with your favori
 
 ## 📸 App Preview
 
-Here's a quick look at the app's main interfaces.
+<div align="center">
 
 | Login & Sign-Up Page | Main Recipe Dashboard |
 | :---: | :---: |
-| ![Login/Sign-Up Page](./assets/login-page.png) | ![Main Recipe Dashboard](./assets/dashboard.png) |
-| **Recipe Detail View** | **"Follow Along" Mode** | 
-| ![Recipe Detail View](./assets/detail-view.png) | ![Follow Along Mode](./assets/follow-along.png) |
+| <img src="./assets/login-page.png" alt="Login/Sign-Up Page" height="250px"/> | <img src="./assets/dashboard.png" alt="Main Recipe Dashboard" height="250px"/> |
+| **Recipe Detail View** | **"Follow Along" Mode** |
+| <img src="./assets/detail-view.png" alt="Recipe Detail View" height="250px"/> | <img src="./assets/follow-along.png" alt="Follow Along Mode" height="250px"/> |\
+
+</div>
+
 
 ---
 
