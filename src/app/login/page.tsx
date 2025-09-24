@@ -37,6 +37,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSwitchingToLogin, setIsSwitchingToLogin] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   const { user, signInWithGoogle, signInAnonymously, signOut } = useAuth();
@@ -177,13 +178,11 @@ export default function LoginPage() {
     }
   };
 
-  const handleLoginExisting = async () => {
-    setIsLoading(true);
-    await signOut();
-    setIsLoading(false);
+  const handleLoginExisting = () => {
+    setIsSwitchingToLogin(true);
   };
   
-  const isGuestMode = !!user?.isAnonymous;
+  const isGuestMode = !!user?.isAnonymous && !isSwitchingToLogin;
 
   return (
     <>
