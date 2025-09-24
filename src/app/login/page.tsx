@@ -24,16 +24,19 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSigningUp, setIsSigningUp] = useState(false);
-  const router = useRouter();
   const { user, signInWithGoogle, signInAnonymously, signInWithEmail, signUpWithEmail, isLoading } = useAuth();
-  
-  // This state helps differentiate a user who is a guest and wants to log in vs just being a guest.
-  const [isSwitchingToLogin, setIsSwitchingToLogin] = useState(false);
+  const router = useRouter();
+
+  // This state tracks whether the user wants to sign up or log in.
+  // We default to 'login' and simplify the logic.
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+
+  // A user is in "guest mode" if they are anonymous.
+  const isGuestMode = !!user?.isAnonymous;
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSigningUp) {
+    if (authMode === 'signup') {
       await signUpWithEmail(email, password);
     } else {
       await signInWithEmail(email, password);
@@ -41,15 +44,14 @@ export default function LoginPage() {
   };
   
   const handleAnonymousSignIn = async () => {
-    if (user?.isAnonymous) {
-        // If already a guest, just go back to the app.
+    // If the user is already a guest, just take them back to the app.
+    if (isGuestMode) {
         router.push('/');
         return;
     }
+    // Otherwise, create a new guest session.
     await signInAnonymously();
   };
-
-  const isGuestMode = !!user?.isAnonymous && !isSwitchingToLogin;
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
@@ -59,10 +61,10 @@ export default function LoginPage() {
             <ChefHat className="h-10 w-10 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold font-headline">
-            {isGuestMode ? 'Save Your Progress' : (isSigningUp ? 'Create an Account' : 'Welcome Back')}
+            {isGuestMode ? 'Save Your Progress' : (authMode === 'signup' ? 'Create an Account' : 'Welcome Back')}
           </CardTitle>
           <CardDescription>
-            {isGuestMode ? 'Create an account to save your recipes permanently.' : (isSigningUp ? 'Enter your details to get started.' : 'Log in to access your culinary canvas.')}
+            {isGuestMode ? 'Sign up or log in to save your recipes.' : (authMode === 'signup' ? 'Enter your details to get started.' : 'Log in to access your culinary canvas.')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -88,11 +90,11 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                autoComplete={isSigningUp ? 'new-password' : 'current-password'}
+                autoComplete={authMode === 'signup' ? 'new-password' : 'current-password'}
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <Loader2 className="animate-spin" /> : (isGuestMode ? 'Save & Create Account' : (isSigningUp ? 'Sign Up' : 'Log In'))}
+              {isLoading ? <Loader2 className="animate-spin" /> : (authMode === 'signup' ? 'Sign Up' : 'Log In')}
             </Button>
           </form>
 
@@ -105,8 +107,9 @@ export default function LoginPage() {
           <div className="space-y-2">
             <Button variant="outline" className="w-full" onClick={signInWithGoogle} disabled={isLoading}>
               {isLoading ? <Loader2 className="animate-spin" /> : <><GoogleIcon className="mr-2 h-5 w-5" />
-              {isGuestMode ? 'Link with Google' : 'Sign in with Google'}</>}
+              {isGuestMode ? 'Continue with Google' : 'Sign in with Google'}</>}
             </Button>
+            {/* Show guest button only if not already a guest */}
             {!isGuestMode && (
               <Button variant="outline" className="w-full" onClick={handleAnonymousSignIn} disabled={isLoading}>
                 {isLoading ? <Loader2 className="animate-spin" /> : <><User className="mr-2 h-5 w-5" />
@@ -115,34 +118,18 @@ export default function LoginPage() {
             )}
           </div>
           
-          {isGuestMode ? (
-              <div className="mt-4 text-center text-sm">
-                  Already have an account?
-                  <Button
-                      variant="link"
-                      className="pl-1"
-                      onClick={() => setIsSwitchingToLogin(true)}
-                      disabled={isLoading}
-                  >
-                      {isLoading ? <Loader2 className="animate-spin" /> : 'Log In'}
-                  </Button>
-              </div>
-          ) : (
-              <div className="mt-4 text-center text-sm">
-                  {isSigningUp ? 'Already have an account?' : "Don't have an account?"}
-                  <Button
-                  variant="link"
-                  className="pl-1"
-                  onClick={() => setIsSigningUp(!isSigningUp)}
-                  >
-                  {isSigningUp ? 'Log In' : 'Sign Up'}
-                  </Button>
-              </div>
-          )}
+          <div className="mt-4 text-center text-sm">
+              {authMode === 'signup' ? 'Already have an account?' : "Don't have an account?"}
+              <Button
+                variant="link"
+                className="pl-1"
+                onClick={() => setAuthMode(authMode === 'signup' ? 'login' : 'signup')}
+              >
+              {authMode === 'signup' ? 'Log In' : 'Sign Up'}
+              </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-
-    

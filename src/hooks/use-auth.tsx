@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    // Redirect after successful login
+    // Redirect after successful login to a permanent account
     if (!loading && user && !user.isAnonymous && pathname === '/login') {
       router.push('/');
     }
@@ -102,13 +102,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // If a user (including guest) is already logged in, sign them out first.
       if (auth.currentUser) {
         await firebaseSignOut(auth);
       }
       await action();
-      // Successful toast messages can be added here if desired,
-      // but redirection is handled by the useEffect.
     } catch (error) {
       handleError(error);
     } finally {
@@ -130,21 +127,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUpWithEmail = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-        if (user?.isAnonymous) {
-            // Link guest account
+        const currentUser = auth.currentUser;
+        if (currentUser && currentUser.isAnonymous) {
             const credential = EmailAuthProvider.credential(email, password);
-            await linkWithCredential(user, credential);
+            await linkWithCredential(currentUser, credential);
             toast({ title: "Account created successfully!", description: "Your guest data has been saved." });
         } else {
-            // Create new account
+            if (currentUser) {
+                await firebaseSignOut(auth);
+            }
             await createUserWithEmailAndPassword(auth, email, password);
             toast({ title: "Account created successfully!", description: "You've been logged in." });
         }
     } catch (error) {
-        handleError(error, () => {
-          // This callback is currently not used here but could be.
-          // e.g., to switch the form from sign-up to log-in.
-        });
+        handleError(error);
     } finally {
         setIsLoading(false);
     }
@@ -179,5 +175,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-    
