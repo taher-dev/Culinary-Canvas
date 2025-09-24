@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback } from './ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
@@ -49,6 +49,7 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8 border">
+                      {user.photoURL && <AvatarImage src={user.photoURL} alt="User profile picture" />}
                       <AvatarFallback>
                         {user.isAnonymous ? 'G' : user.email?.[0].toUpperCase()}
                       </AvatarFallback>
