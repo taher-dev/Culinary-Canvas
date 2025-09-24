@@ -48,15 +48,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!loading) {
-      if (user && pathname === '/login') {
+      if (user && !user.isAnonymous && pathname === '/login') {
         router.push('/');
       } else if (!user && pathname !== '/login') {
+        // Only sign in anonymously if not on the login page
         firebaseSignInAnonymously(auth).catch((error) => {
           console.error("Anonymous sign-in failed", error);
         });
       }
     }
   }, [user, loading, pathname, router]);
+
 
   const signOut = async () => {
     try {
