@@ -107,10 +107,10 @@ export default function LoginPage() {
         
         if (authError.code === 'auth/popup-closed-by-user') {
             description = "The sign-in popup was closed before completing. Please try again.";
-        } else if (authError.code === 'auth/credential-already-in-use' || authError.code === 'auth/email-already-in-use') {
-            description = "This Google account is already linked to another user. Please sign in with your original method.";
         } else if (authError.code === 'auth/account-exists-with-different-credential') {
-            description = "An account with this email already exists. Please sign in with your original method to link your Google account.";
+            description = "This email is already linked to another user. Please sign in with your original method to link your Google account.";
+        } else if (authError.code === 'auth/credential-already-in-use') {
+            description = "This Google account is already linked to another user.";
         } else {
              console.error("Google Sign-In Error:", authError);
         }
