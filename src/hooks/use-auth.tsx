@@ -140,14 +140,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             toast({ title: "Account created successfully!", description: "You've been logged in." });
         }
     } catch (error) {
-        handleError(error);
+        handleError(error, () => {
+          // This callback is specific for the 'email-already-in-use' case
+          // In a more complex scenario, you might want to pass a specific action here
+          // For now, it just shows the toast.
+        });
     } finally {
         setIsLoading(false);
     }
   };
 
   const signInAnonymously = async () => {
-    await performAuthAction(() => firebaseSignInAnonymously(auth));
+    await performAuthAction(async () => {
+      await firebaseSignInAnonymously(auth);
+      router.push('/');
+    });
   };
 
   const authContextValue: AuthContextType = {
